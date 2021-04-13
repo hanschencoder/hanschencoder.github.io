@@ -14,7 +14,7 @@ categories:
 在通信过程中，https是如何保证通信的安全的？如何加密信息，如何防止中间人攻击？
 以下是客户端发起https请求的时候的流程：
 
-![2019-9-2-10-48-38.png](https://raw.githubusercontent.com/shensky711/Pictures/master/2019-9-2-10-48-38.png)
+![2019-9-2-10-48-38.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-10-48-38.png)
 
 流程解析如下：
 
@@ -61,15 +61,15 @@ categories:
  - 真伪辨认工具：CA证书
 
 那么，什么是CA颁发的“身份证”呢？
-![2019-9-2-10-49-28.png](https://raw.githubusercontent.com/shensky711/Pictures/master/2019-9-2-10-49-28.png)
+![2019-9-2-10-49-28.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-10-49-28.png)
 
  1. 服务端生成自己的证书请求文件（尚未被CA签名），里面包含了姓名、服务器私钥对应的公钥等信息
  2. CA机构对该证书进行签名，也就是生成数字签名，注意，这个签名是**用CA的私钥**加密过的
  3. 把原始的证书和生成的数字签名合并在一起，形成证书
-![2019-9-2-10-50-23.png](https://raw.githubusercontent.com/shensky711/Pictures/master/2019-9-2-10-50-23.png)
+![2019-9-2-10-50-23.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-10-50-23.png)
 
 
-![2019-9-2-10-50-35.png](https://raw.githubusercontent.com/shensky711/Pictures/master/2019-9-2-10-50-35.png)
+![2019-9-2-10-50-35.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-10-50-35.png)
 
 在https的步骤（2）的时候，服务器发给用户的证书就是这个签名过之后的证书，客户端收到证书后，会使用CA的公钥（这个是内置在浏览器的）对数字签名进行解密得出一个信息摘要，然后用哈希算法自己算出信息摘要，对比摘要，一致的话，证明该证书是CA机构颁发的。因为**公钥只能解开私钥加密的数据**，如果信息摘要是匹配的，那么证明该加密数据是由CA机构用私钥加密的，证书是可靠的。
 

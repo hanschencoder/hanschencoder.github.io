@@ -25,7 +25,7 @@ JNI最大的好处是JNI不受Java虚拟机实现方式的限制，因此，Java
 
 # JNI接口函数和指针
 本地代码通过JNI函数（接口指针，接口指针是指针的指针）来访问java VM。
-![2019-9-2-11-13-8.png](https://raw.githubusercontent.com/shensky711/Pictures/master/2019-9-2-11-13-8.png)
+![2019-9-2-11-13-8.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-11-13-8.png)
 
 JNI接口指针只在当前线程有效，因此在native方法中**不要跨线程传递接口指针参数**。native方法接收JNI接口指针参数，VM确保在同一个线程中调用native方法的时候，传递同一个接口指针给接口指针给native方法。然而，native方法可能在Java中的不同线程中调用，所以native方法接收到的接口指针可能是不一样的。
  
@@ -263,7 +263,7 @@ JNI中还定义了以下两个宏定义方便使用：
 
 # 引用类型
 JNI为不同的java对象提供了不同的引用类型，JNI引用类型如下：
-![2019-9-2-11-13-39.png](https://raw.githubusercontent.com/shensky711/Pictures/master/2019-9-2-11-13-39.png)
+![2019-9-2-11-13-39.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-11-13-39.png)
 在c里面，所有JNI引用类型其实都是`jobject`
 
 # 字段和方法ID

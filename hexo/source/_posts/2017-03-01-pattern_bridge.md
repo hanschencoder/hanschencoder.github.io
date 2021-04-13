@@ -18,7 +18,7 @@ categories:
 ### 实现简化版本
 
 先实现一个简单点的版本：消息只是实现发送普通消息，发送的方式先实现系统内短消息和邮件。其它的功能，等这个版本完成过后，再继续添加，这样先把问题简单化，实现起来会容易一点。由于发送普通消息会有两种不同的实现方式，为了让外部能统一操作，因此，把消息设计成接口，然后由两个不同的实现类，分别实现系统内短消息方式和邮件发送消息的方式。此时系统结构如下：
-![2019-9-2-12-30-41.png](https://raw.githubusercontent.com/shensky711/Pictures/master/2019-9-2-12-30-41.png)
+![2019-9-2-12-30-41.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-12-30-41.png)
 
 先来看看消息的统一接口，示例代码如下：
 ```java
@@ -59,7 +59,7 @@ public class CommonMessageEmail implements Message {
 ### 实现发送加急消息
 上面的实现，看起来很简单，对不对。接下来，添加发送加急消息的功能，也有两种发送的方式，同样是站内短消息和Email的方式。
 加急消息的实现跟普通消息不同，加急消息会自动在消息上添加加急，然后再发送消息；另外加急消息会提供监控的方法，让客户端可以随时通过这个方法来了解对于加急消息处理的进度，比如：相应的人员是否接收到这个信息，相应的工作是否已经开展等等。因此加急消息需要扩展出一个新的接口，除了基本的发送消息的功能，还需要添加监控的功能，这个时候，系统的结构如图所示：
-![2019-9-2-12-31-39.png](https://raw.githubusercontent.com/shensky711/Pictures/master/2019-9-2-12-31-39.png)
+![2019-9-2-12-31-39.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-12-31-39.png)
 
 先看看扩展出来的加急消息的接口，示例代码如下：
 ```java
@@ -119,7 +119,7 @@ public class UrgencyMessageEmail implements UrgencyMessage {
 
 ### 继续添加特急消息的处理
 特急消息不需要查看处理进程，只要没有完成，就直接催促，也就是说，对于特急消息，在普通消息的处理基础上，需要添加催促的功能。而特急消息、还有催促的发送方式，相应的实现方式还是发送站内短消息和Email两种，此时系统的结构如图所示：
-![2019-9-2-12-32-9.png](https://raw.githubusercontent.com/shensky711/Pictures/master/2019-9-2-12-32-9.png)
+![2019-9-2-12-32-9.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-12-32-9.png)
 
 仔细观察上面的系统结构示意图，会发现一个很明显的问题，那就是：通过这种继承的方式来扩展消息处理，会非常不方便。
 你看，实现加急消息处理的时候，必须实现站内短消息和Email两种处理方式，因为业务处理可能不同；在实现特急消息处理的时候，又必须实现站内短消息和Email这两种处理方式。
@@ -129,7 +129,7 @@ public class UrgencyMessageEmail implements UrgencyMessage {
 
 如果看到上面的实现，你还感觉问题不是很大的话，继续完成功能，添加发送手机消息的处理方式
 仔细观察现在的实现，如果要添加一种新的发送消息的方式，是需要在每一种抽象的具体实现里面，都要添加发送手机消息的处理的。也就是说：发送普通消息、加急消息和特急消息的处理，都可以通过手机来发送。这就意味着，需要添加三个实现。此时系统结构如图所示：
-![2019-9-2-12-32-31.png](https://raw.githubusercontent.com/shensky711/Pictures/master/2019-9-2-12-32-31.png)
+![2019-9-2-12-32-31.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-12-32-31.png)
  
 这下能体会到这种实现方式的大问题了吧。
 
@@ -157,7 +157,7 @@ public class UrgencyMessageEmail implements UrgencyMessage {
 
 ## 模式结构和说明
 桥接模式的结构图：
-![2019-9-2-12-32-50.png](https://raw.githubusercontent.com/shensky711/Pictures/master/2019-9-2-12-32-50.png)
+![2019-9-2-12-32-50.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-12-32-50.png)
 
  - Abstraction：抽象部分的接口。通常在这个对象里面，要维护一个实现部分的对象引用，在抽象对象里面的方法，需要调用实现部分的对象来完成。这个对象里面的方法，通常都是跟具体的业务相关的方法。
  - RefinedAbstraction：扩展抽象部分的接口，通常在这些对象里面，定义跟实际业务相关的方法，这些方法的实现通常会使用Abstraction中定义的方法，也可能需要调用实现部分的对象来完成。
@@ -245,7 +245,7 @@ public class RefinedAbstraction extends Abstraction {
 
 ### 从简单功能开始
 从相对简单的功能开始，先实现普通消息和加急消息的功能，发送方式先实现站内短消息和Email这两种。使用桥接模式来实现这些功能的程序结构如图所示
-![2019-9-2-12-33-19.png](https://raw.githubusercontent.com/shensky711/Pictures/master/2019-9-2-12-33-19.png)
+![2019-9-2-12-33-19.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-12-33-19.png)
 
 还是看看代码实现，会更清楚一些。先看看消息发送器接口，示例代码如下：
 ```java

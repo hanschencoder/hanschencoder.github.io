@@ -66,7 +66,7 @@ public class Sorter {
 > 模板方法模式:定义一个算法的骨架，将骨架中的特定步骤延迟到子类中。模板方法模式使得子类可以不改变算法的结构即可重新定义该算法的某些特定步骤
 
 下图是用模板方法模式对冒泡排序重构后的结构图：
-![2019-9-2-11-29-33.png](https://raw.githubusercontent.com/shensky711/Pictures/master/2019-9-2-11-29-33.png)
+![2019-9-2-11-29-33.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-11-29-33.png)
 
 首先，我们在BubbleSorter的sort方法中定义算法骨架，再定义一些延迟到子类中的抽象方法：
 ```java
@@ -243,7 +243,7 @@ public class Test {
 策略模式属于对象的行为模式。其用意是针对一组算法，将每一个算法封装到具有共同接口的独立的类中，从而使得它们可以相互替换，下面用策略模式对冒泡排序进行重构
 
 下图是用策略模式对冒泡排序重构后的结构图：
-![2019-9-2-11-35-32.png](https://raw.githubusercontent.com/shensky711/Pictures/master/2019-9-2-11-35-32.png)
+![2019-9-2-11-35-32.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-11-35-32.png)
 
 首先定义一个BubbleSorter类，它持有一个抽象策略接口：
 ```java

@@ -10,7 +10,7 @@ categories:
 
 随着 Android Q 发布，「黑暗模式」或者说是「夜间模式」终于在此版本中得到了支持，官方介绍见：[https://developer.android.com/guide/topics/ui/look-and-feel/darktheme](https://developer.android.com/guide/topics/ui/look-and-feel/darktheme)，再看看效果图：
 
-![2019-10-21-17-21-50.png](https://raw.githubusercontent.com/shensky711/Pictures/master/2019-10-21-17-21-50.png)
+![2019-10-21-17-21-50.png](https://gitee.com/hanschencoder/Images/raw/master/2019-10-21-17-21-50.png)
 
 其实这个功能魅族在两年前就已支持，不得不说 Android 有点落后了，今天我们就来看看原生是怎么实现全局夜间模的吧
 

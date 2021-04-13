@@ -11,7 +11,7 @@ categories:
 
 先看一下效果：
 
-![2019-10-11-15-02-40.gif](https://raw.githubusercontent.com/shensky711/Pictures/master/2019-10-11-15-02-40.gif)
+![2019-10-11-15-02-40.gif](https://gitee.com/hanschencoder/Images/raw/master/2019-10-11-15-02-40.gif)
 
 
 # 2. CMake

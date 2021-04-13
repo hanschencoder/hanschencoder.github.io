@@ -17,7 +17,7 @@ categories:
 
 # 2. 使用介绍
 
-在使用之前，我们先来看看 OverScroller 能帮我们做什么：
+在使用之前，先来看看 OverScroller 能做什么：
 
  - startScroll：从指定位置滚动一段指定的距离然后停下，滚动效果与设置的滚动距离、滚动时间、插值器有关，**跟离手速度没有关系**。一般用于控制 View 滚动到**指定**的位置
  - fling：从指定位置滑动一段位置然后停下，滚动效果只与**离手速度**以及滑动边界有关，**不能**设置滚动距离、滚动时间和插值器。一般用于触摸抬手后继续让 View 滑动一会
@@ -25,7 +25,7 @@ categories:
 
 |startScroll|fling|springBack|
 |:-:|:-:|:-:|
-| <img style="border: none;" src="https://raw.githubusercontent.com/shensky711/Pictures/master/2021-04-09-16-11-34.gif"> | <img style="border: none;" src="https://raw.githubusercontent.com/shensky711/Pictures/master/2021-04-09-16-11-51.gif"> |<img style="border: none;" src="https://raw.githubusercontent.com/shensky711/Pictures/master/2021-04-09-16-12-02.gif"> |
+| <img style="border: none;" src="https://gitee.com/hanschencoder/Images/raw/master/2021-04-09-16-11-34.gif"> | <img style="border: none;" src="https://gitee.com/hanschencoder/Images/raw/master/2021-04-09-16-11-51.gif"> |<img style="border: none;" src="https://gitee.com/hanschencoder/Images/raw/master/2021-04-09-16-12-02.gif"> |
 
 
 在代码中使用也很简单：
@@ -56,7 +56,7 @@ categories:
 
 # 3. 深入 OverScroller 内部
 
-在上面代码中我们知道，启动一个滚动任务后，是通过不断地调用 computeScrollOffset 来计算位置的，接下来我们看下代码实现
+在上面代码中可知，启动一个滚动任务后，是通过不断地调用 computeScrollOffset 来计算位置的，接下来看下代码实现
 
 ## 3.1 startScroll
 
@@ -146,7 +146,7 @@ public class OverScroller {
 
 逻辑也是很简单，实在没太多可说的……就是把插值器曲线映射到位移曲线，时长如果不指定的话，默认是 250ms，插值器需要通过构造方法传入，如果不指定的话，系统默认会指定一个 `ViscousFluidInterpolator`，下面是这个插值器的曲线，可以看到是一个先缓后快再缓的动画
 
-![ViscousFluidInterpolator](https://raw.githubusercontent.com/shensky711/Pictures/master/2021-04-09-17-31-04.png)
+![ViscousFluidInterpolator](https://gitee.com/hanschencoder/Images/raw/master/2021-04-09-17-31-04.png)
 
 
 ## 3.2 fling & springBack
@@ -155,8 +155,8 @@ public class OverScroller {
 
 <table>
     <tr>
-        <td><img style="border: none;" src="https://raw.githubusercontent.com/shensky711/Pictures/master/2021-04-09-17-44-46.gif" width = "300" /></td>
-        <td><img style="border: none;" src="https://raw.githubusercontent.com/shensky711/Pictures/master/2021-04-09-18-25-11.png" width = "300" /></td>
+        <td><img style="border: none;" src="https://gitee.com/hanschencoder/Images/raw/master/2021-04-09-17-44-46.gif" width = "300" /></td>
+        <td><img style="border: none;" src="https://gitee.com/hanschencoder/Images/raw/master/2021-04-09-18-25-11.png" width = "300" /></td>
     </tr>
 </table>
 
@@ -166,9 +166,9 @@ public class OverScroller {
  - BALLISTIC：越界减速阶段
  - CUBIC：回弹阶段
 
-`springBack` 后执行的动画，其实就是 `fling` 的 `CUBIC` 阶段，所以我们干脆就放在一起说了
+`springBack` 后执行的动画，其实就是 `fling` 的 `CUBIC` 阶段，所以干脆就放在一起说了
 
-这个命名其实也挺有意思，这三个分别是样条曲线、弹道曲线、三次曲线，从命名上我们大致也可以推断出，三个阶段采用的「时间-位置」曲线是不一样的。
+这个命名其实也挺有意思，这三个分别是样条曲线、弹道曲线、三次曲线，从命名上大致也可以推断出，三个阶段采用的「时间-位置」曲线是不一样的。
 
 当然了，Android 很多控件在  fling 的时候，都把越界距离设置成 0 了，取而代之的是显示一个 `EdgeEffect` 也就是说执行完 SPLINE 阶段动画后，由于越界距离为 0，`BALLISTIC` 和 `CUBIC` 都被砍掉了，所以我们很经常看到列表到达顶/底部的时候，一下子停在那里，所以究竟是哪种体验好一点呢？
 
@@ -249,10 +249,10 @@ public class OverScroller {
 }
 ```
 
-<img style="border: none;" src="https://raw.githubusercontent.com/shensky711/Pictures/master/2021-04-09-19-21-01.png"/>
+<img style="border: none;" src="https://gitee.com/hanschencoder/Images/raw/master/2021-04-09-19-21-01.png"/>
 
 
-看代码前我们先来看看上面的图，图中说明了 start、min、max、over 等位置的意义，这里简要说明一下
+看代码前先来看看上面的图，图中说明了 start、min、max、over 等位置的意义，这里简要说明一下
 
  - fling 后最终停下来的位置必须在 min 和 max 区间之间
  - BALLISTIC 越界阶段，不能超过 over 的位置，即 over 是最大越界距离
@@ -269,21 +269,21 @@ fling 函数主要功能：
  - 标记当前状态为 SPLINE 状态
 
 
-滑动距离和时长的计算公式中，可以把 mPhysicalCoeff 也看做常数，我们把**时长公式**和图像列出来：
+滑动距离和时长的计算公式中，可以把 mPhysicalCoeff 也看做常数，把**时长-速度公式**和图像列出来：
 
 $$
 y=1000\cdot \exp \left( \frac{\ln \left( \frac{0.35x}{2140.47} \right)}{1.358} \right)
 $$
 
 
-![2021-04-12-10-26-21](https://raw.githubusercontent.com/shensky711/Pictures/master/2021-04-12-10-26-21.png)
+![2021-04-12-10-26-21](https://gitee.com/hanschencoder/Images/raw/master/2021-04-12-10-26-21.png)
 
-再看看**距离公式**：
+再看看**距离-速度公式**：
 
 $$
 y=2140.47\cdot \exp \left( 1.74\cdot \ln \left( \frac{0.35\cdot x}{2140.47} \right) \right)
 $$
-![2021-04-12-10-30-53](https://raw.githubusercontent.com/shensky711/Pictures/master/2021-04-12-10-30-53.png)
+![2021-04-12-10-30-53](https://gitee.com/hanschencoder/Images/raw/master/2021-04-12-10-30-53.png)
 
 
 可以看到距离和时长都是随着速度增大而增大的，只不过时长的增长速度在后期会有一定的收敛，保证动画时长不至于太长
@@ -294,11 +294,11 @@ $$
 y=\frac{2140.47\cdot \exp \left( 1.74\cdot \ln \left( \frac{0.35\cdot x}{2140.47} \right) \right)}{1000\cdot \exp \left( \frac{\ln \left( \frac{0.35x}{2140.47} \right)}{1.358} \right)}
 $$
 
-![2021-04-12-10-45-06](https://raw.githubusercontent.com/shensky711/Pictures/master/2021-04-12-10-45-06.png)
+![2021-04-12-10-45-06](https://gitee.com/hanschencoder/Images/raw/master/2021-04-12-10-45-06.png)
 
 但是说实话，目前我暂时没想明白这两个公式的物理意义，有明白的大佬求告知~ 难道是利用了对数函数收敛的特性确定了时长公式，然后设定平均速度线性增长后，推导出距离公式？
 
-目前我只确定了滑动总距离和时长，那么中间过程是怎么更新位置的呢：
+目前只确定了滑动总距离和时长，那么中间过程是怎么更新位置的呢：
 
 ```java
 public class OverScroller {
@@ -451,7 +451,7 @@ public class OverScroller {
 
 看代码很难想象它长什么样，直接看看它的图像吧：
 
-![2021-04-12-11-24-04](https://raw.githubusercontent.com/shensky711/Pictures/master/2021-04-12-11-24-04.png)
+![2021-04-12-11-24-04](https://gitee.com/hanschencoder/Images/raw/master/2021-04-12-11-24-04.png)
 
 
 也就是说，SPLINE 和 startScroll 很像，位置曲线都是由一根预置的曲线决定的，把预置曲线映射真实的距离，只是 SPLINE 没有使用插值器曲线，而是使用了一根缓停的样条曲线
@@ -499,7 +499,7 @@ $$
 
 ### 3.2.3 CUBIC
 
-上一节我们知道，BALLISTIC 阶段结束时，速度已经降低为 0，我们终于来到最后一段， 从 continueWhenFinished 里会调用 `startSpringback` 作为 CUBIC 的初始化：
+上一节内容知道，BALLISTIC 阶段结束时，速度已经降低为 0，我们终于来到最后一段， 从 continueWhenFinished 里会调用 `startSpringback` 作为 CUBIC 的初始化：
 
 ```java
     private void startSpringback(int start, int end, int velocity) {
@@ -545,7 +545,7 @@ $ v_0=0，v_t=at $，那么 $ delta=\frac{at^2} {2} $，$ t=\sqrt{ \frac{2*delta
 
 核心逻辑是这个 `3.0f * t2 - 2.0f * t * t2`, 这其实是一个比较常用的三次曲线：
 
-![2021-04-12-14-34-02](https://raw.githubusercontent.com/shensky711/Pictures/master/2021-04-12-14-34-02.png)
+![2021-04-12-14-34-02](https://gitee.com/hanschencoder/Images/raw/master/2021-04-12-14-34-02.png)
 
 
 在 [0, 1] 区间内，是一个缓入缓出的曲线。至此，CUBIC 的运动规律也摸清楚了，在固定时间内，把时间映射到 [0, 1] 的区间，再把 y 坐标映射实际的位置
@@ -554,5 +554,5 @@ $ v_0=0，v_t=at $，那么 $ delta=\frac{at^2} {2} $，$ t=\sqrt{ \frac{2*delta
 
 目前为止，我们终于把 `startScroll` 和 `fling` 各阶段的曲线看了一遍，至于 `springBack` 和其他一些情况都大同小异，就不细述了。
 
-很多时候 OverScroller 都是只是使用的固定的曲线映射真正的曲线，比如 `startScroll`、`SPLINE` 和 `CUBIC`，那如果我们想改变效果的话，是不是修改一下曲线形态就可以了呢？但一条曲线是否真的能在不同速度下都有比较好的表现吗？或许我们还要有很多的实践和尝试才能做出一段让用户舒服滑动，而这些探索和尝试，我们放在下一篇文章中~
+很多时候 OverScroller 都是只是使用的固定的曲线映射真正的曲线，比如 `startScroll`、`SPLINE` 和 `CUBIC`，那如果想改变效果的话，是不是修改一下曲线形态就可以了呢？但一条曲线是否真的能在不同速度下都有比较好的表现吗？或许我们还要有很多的实践和尝试才能做出一段让用户舒服滑动，而这些探索和尝试，将放在下一篇文章中详细讨论~
 

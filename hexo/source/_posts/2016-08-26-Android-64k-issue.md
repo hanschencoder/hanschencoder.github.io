@@ -9,7 +9,7 @@ categories:
 # 什么是64K限制和LinearAlloc限制
 ## 64K限制
 随着Android应用功能的增加，代码量不断地增大，当应用方法数量超过了65536的时候，编译的时候便会提示：
-![2019-9-2-10-54-5.png](https://raw.githubusercontent.com/shensky711/Pictures/master/2019-9-2-10-54-5.png)
+![2019-9-2-10-54-5.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-10-54-5.png)
 
 这个Android著名的Dex 64k method数量上限。那么，是什么原因导致方法数不能超过64K呢？网上搜集了一下资料，原因一般有：
 
@@ -26,7 +26,7 @@ categories:
  
 # 谷歌分包方案
 谷歌提供了一个multiDex的分包方案，当方法数超过65536的时候，生成多个dex文件，把应用启动时必须用到的类和该类的直接引用类放到main dex中，把其他类放到second dex中。当应用启动之后，动态加载second dex，从而避免64k问题。使用Android Studio很容易实现分包方案：
-![2019-9-2-10-54-23.png](https://raw.githubusercontent.com/shensky711/Pictures/master/2019-9-2-10-54-23.png)
+![2019-9-2-10-54-23.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-10-54-23.png)
 
  1. 在build.gradle中添加：multiDexEnabled true
  2. 加入依赖‘compile 'com.android.support:multidex:1.0.1'’
@@ -55,5 +55,5 @@ categories:
 
 下面是流程图：
 
-![2019-9-2-10-54-35.png](https://raw.githubusercontent.com/shensky711/Pictures/master/2019-9-2-10-54-35.png)
+![2019-9-2-10-54-35.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-10-54-35.png)
  
