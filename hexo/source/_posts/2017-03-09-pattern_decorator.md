@@ -34,7 +34,7 @@ public interface Shape {
 ```
 
 然后我们定义各种情况下的子类，结构如下，看到这么多的子类，是不是有点要爆炸的感觉？真是想想都可怕
-![2019-9-2-12-35-9.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-12-35-9.png)
+![2019-9-2-12-35-9.png](http://image.hanschen.site/master/2019-9-2-12-35-9.png)
 
 而且如果再新增一种需求，比如现在要画椭圆，那么维护的人员估计就要爆粗了吧？
 
@@ -112,7 +112,7 @@ public class ShapeImpl implements Shape {
 但这种灵活也会带来一些缺点，这种比继承更加灵活机动的特性，也同时意味着更加多的复杂性。装饰模式会导致设计中出现许多小类，如果过度使用，会使程序变得很复杂
 
 下面来看看装饰模式的结构：
-![2019-9-2-12-35-32.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-12-35-32.png)
+![2019-9-2-12-35-32.png](http://image.hanschen.site/master/2019-9-2-12-35-32.png)
  
  1. Component抽象组件，是一个接口或者是抽象类，就是定义我们最核心的对象，也就是最原始的对象。（注：在装饰模式中，必然有一个最基本、最核心、最原始的接口或者抽象类充当Component抽象组件）
  2. ConcreteComponent具体组件，是最核心、最原始、最基本的接口或抽象类的实现，我们需要装饰的就是它
@@ -187,7 +187,7 @@ public class ConcreteDecoratorB extends Decorator {
 
 ## 用装饰模式实现需求
 先上结构图
-![2019-9-2-12-35-51.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-12-35-51.png)
+![2019-9-2-12-35-51.png](http://image.hanschen.site/master/2019-9-2-12-35-51.png)
 
 首先定义可动态扩展对象的抽象
 ```java

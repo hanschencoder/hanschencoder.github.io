@@ -30,10 +30,10 @@ MockWebServer是在单元测试中启动一个web server的，主要用于测试
 
 # MockWebServer环境配置
 Android Studio中使用MockWebServer很简单，只需要在build.gradle文件中加入依赖即可。如图：
-![2019-9-2-10-34-51.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-10-34-51.png)
+![2019-9-2-10-34-51.png](http://image.hanschen.site/master/2019-9-2-10-34-51.png)
  
 添加依赖之后，点击sync,即可自动下载：
-![2019-9-2-10-35-12.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-10-35-12.png)
+![2019-9-2-10-35-12.png](http://image.hanschen.site/master/2019-9-2-10-35-12.png)
  
 # MockWebServer一般步骤
 
@@ -43,23 +43,23 @@ Android Studio中使用MockWebServer很简单，只需要在build.gradle文件�
 
 下面是一个使用的例子：
 
-![2019-9-2-10-35-27.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-10-35-27.png)
+![2019-9-2-10-35-27.png](http://image.hanschen.site/master/2019-9-2-10-35-27.png)
  
 
 # MockWebServer使用方法
 
 ## 添加预置的响应
-![2019-9-2-10-39-19.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-10-39-19.png)
+![2019-9-2-10-39-19.png](http://image.hanschen.site/master/2019-9-2-10-39-19.png)
  
 预置的相应，会按照添加的顺序依次返回给客户端。可以给MockResponse设置header、状态码、body。
 
 ## 模拟网速慢的情况
-![2019-9-2-10-36-16.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-10-36-16.png)
+![2019-9-2-10-36-16.png](http://image.hanschen.site/master/2019-9-2-10-36-16.png)
  
 设置这个MockResponse返回的时候，以低速率传输。
 
 ## RecordedRequest的使用
-![2019-9-2-10-36-45.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-10-36-45.png)
+![2019-9-2-10-36-45.png](http://image.hanschen.site/master/2019-9-2-10-36-45.png)
  
 按顺序从web server把接收到的request取出来，这是一个阻塞的方法，会一直等待到web server接收到了请求之后再返回。RecordedRequest可以帮助我们验证我们的请求客户端是否按预期生成了请求，可以验证的内容分别有：
 
@@ -72,6 +72,6 @@ Android Studio中使用MockWebServer很简单，只需要在build.gradle文件�
 ## Dispatcher的使用
 有时候我们希望web server能根据我们的请求返回不同的response，dispatcher可以帮助我们做到这个，使用方法如下：
 
-![2019-9-2-10-36-58.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-10-36-58.png)
+![2019-9-2-10-36-58.png](http://image.hanschen.site/master/2019-9-2-10-36-58.png)
  
 开发者也可以根据不同的设定（如method、header等）放回不同的响应。

@@ -16,11 +16,11 @@ categories:
 # 3. 源码下载
 
  1. 根据 [https://developers.google.com/android/drivers](https://developers.google.com/android/drivers) 选择一个设备对应 Android 版本号和驱动，比如我们选择：Android 10.0.0 (QP1A.190711.020)，下载驱动，记住 **Build 号**
- ![2019-9-12-16-53-40.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-12-16-53-40.png)
+ ![2019-9-12-16-53-40.png](http://image.hanschen.site/master/2019-9-12-16-53-40.png)
 
 
  2. 在 [https://source.android.com/setup/start/build-numbers](https://source.android.com/setup/start/build-numbers) 查找 QP1A.190711.020 对应的分支：android-10.0.0_r2，记住**分支名**
-![2019-9-12-16-56-41.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-12-16-56-41.png)
+![2019-9-12-16-56-41.png](http://image.hanschen.site/master/2019-9-12-16-56-41.png)
 
  3. 下载 AOSP 源码
 注意在下载 aosp 前要安装 repo 工具，参考：[https://source.android.com/setup/build/downloading](https://source.android.com/setup/build/downloading)
@@ -56,6 +56,6 @@ repo start android-10.0.0_r2 --all
  1. 在 [https://opengapps.org/](https://opengapps.org/) 根据系统版本、芯片类型选择需要的 Gapps 全家桶，可以选 stock 版本
  2. 下载后把全家桶 push 到手机 sdcard（不用解压）
  3. 在 [https://twrp.me/devices/](https://twrp.me/devices/) 搜索你的设备，如： [https://twrp.me/google/googlepixel2.html](https://twrp.me/google/googlepixel2.html)
-![2019-9-12-17-3-22.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-12-17-3-22.png)
+![2019-9-12-17-3-22.png](http://image.hanschen.site/master/2019-9-12-17-3-22.png)
  4. 下载 twrp.img 后根据截图中的命令，把 twrp 加载到手机， 选择 install 刷入 twrp.zip (这是一个 recovery 版本)，重启后，通过 adb reboot recovery 进入 twrp 的recovery 系统
  5. 在手机上选择 install， 选择步骤2中 push 到手机 sdcard 的全家桶，安装结束后选择擦除 dalvik cache 和 cache，重启即可

@@ -36,7 +36,7 @@ categories:
 # 代理模式
 ## UML图
 先看看代理模式的结构图：
-![2019-9-2-12-29-26.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-12-29-26.png)
+![2019-9-2-12-29-26.png](http://image.hanschen.site/master/2019-9-2-12-29-26.png)
 
 ## 代码
 下面给出一个小栗子说明代理模式，先定义一个抽象角色，也就是一个公共接口，声明一些需要代理的方法,本文定义一个`Subject`接口，为了简单说明，只是在里面定义一个request方法：
@@ -90,7 +90,7 @@ public class Client {
 
 ## 远程代理
 远程代理，对一个位于不同的地址空间对象提供一个局域代表对象。这样说大家可能比较抽象，不太能理解，但其实童鞋们可能在就接触过了，在Android中，Binder的使用就是典型的远程代理。比如ActivityManager：
-![2019-9-2-12-29-57.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-12-29-57.png)
+![2019-9-2-12-29-57.png](http://image.hanschen.site/master/2019-9-2-12-29-57.png)
 
 在启动Activity的时，会调用`ActivityManager`的startActivity方法，我们看看Activity是怎么获取的：
 ```java

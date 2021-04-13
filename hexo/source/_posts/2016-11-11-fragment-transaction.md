@@ -41,7 +41,7 @@ categories:
 
 # 代码分析
 ## FragmentManager
-![2019-9-2-11-19-20.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-11-19-20.png)
+![2019-9-2-11-19-20.png](http://image.hanschen.site/master/2019-9-2-11-19-20.png)
 上图是获取FragmentManager的大体过程
 
 要管理Fragment事务，首先是需要拿到FragmentManager，在Activity中可以通过`getFragmentManager()`方法获取(使用兼容包的话，通过`FragmentActivity#getSupportFragmentManager()`)，在这里我们就不对兼容包进行分析了
@@ -102,7 +102,7 @@ FragmentManager是一个抽象类，它是通过mFragments.getFragmentManager()�
     }
 ```
 可以看到，所谓的FragmentTransaction其实就是一个BackStackRecord。到现在，FragmentManager和FragmentTransaction我们都找到了。下图就是各个类之间的关系：
-![2019-9-2-11-20-42.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-11-20-42.png)
+![2019-9-2-11-20-42.png](http://image.hanschen.site/master/2019-9-2-11-20-42.png)
 
 
 下面开始真正的事务管理分析，我们先选择一个事务add来进行分析

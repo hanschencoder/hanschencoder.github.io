@@ -25,7 +25,7 @@ categories:
 
 |startScroll|fling|springBack|
 |:-:|:-:|:-:|
-| <img style="border: none;" src="https://gitee.com/hanschencoder/Images/raw/master/2021-04-09-16-11-34.gif"> | <img style="border: none;" src="https://gitee.com/hanschencoder/Images/raw/master/2021-04-09-16-11-51.gif"> |<img style="border: none;" src="https://gitee.com/hanschencoder/Images/raw/master/2021-04-09-16-12-02.gif"> |
+| <img style="border: none;" src="http://image.hanschen.site/master/2021-04-09-16-11-34.gif"> | <img style="border: none;" src="http://image.hanschen.site/master/2021-04-09-16-11-51.gif"> |<img style="border: none;" src="http://image.hanschen.site/master/2021-04-09-16-12-02.gif"> |
 
 
 在代码中使用也很简单：
@@ -146,7 +146,7 @@ public class OverScroller {
 
 逻辑也是很简单，实在没太多可说的……就是把插值器曲线映射到位移曲线，时长如果不指定的话，默认是 250ms，插值器需要通过构造方法传入，如果不指定的话，系统默认会指定一个 `ViscousFluidInterpolator`，下面是这个插值器的曲线，可以看到是一个先缓后快再缓的动画
 
-![ViscousFluidInterpolator](https://gitee.com/hanschencoder/Images/raw/master/2021-04-09-17-31-04.png)
+![ViscousFluidInterpolator](http://image.hanschen.site/master/2021-04-09-17-31-04.png)
 
 
 ## 3.2 fling & springBack
@@ -155,8 +155,8 @@ public class OverScroller {
 
 <table>
     <tr>
-        <td><img style="border: none;" src="https://gitee.com/hanschencoder/Images/raw/master/2021-04-09-17-44-46.gif" width = "300" /></td>
-        <td><img style="border: none;" src="https://gitee.com/hanschencoder/Images/raw/master/2021-04-09-18-25-11.png" width = "300" /></td>
+        <td><img style="border: none;" src="http://image.hanschen.site/master/2021-04-09-17-44-46.gif" width = "300" /></td>
+        <td><img style="border: none;" src="http://image.hanschen.site/master/2021-04-09-18-25-11.png" width = "300" /></td>
     </tr>
 </table>
 
@@ -249,7 +249,7 @@ public class OverScroller {
 }
 ```
 
-<img style="border: none;" src="https://gitee.com/hanschencoder/Images/raw/master/2021-04-09-19-21-01.png"/>
+<img style="border: none;" src="http://image.hanschen.site/master/2021-04-09-19-21-01.png"/>
 
 
 看代码前先来看看上面的图，图中说明了 start、min、max、over 等位置的意义，这里简要说明一下
@@ -276,14 +276,14 @@ y=1000\cdot \exp \left( \frac{\ln \left( \frac{0.35x}{2140.47} \right)}{1.358} \
 $$
 
 
-![2021-04-12-10-26-21](https://gitee.com/hanschencoder/Images/raw/master/2021-04-12-10-26-21.png)
+![2021-04-12-10-26-21](http://image.hanschen.site/master/2021-04-12-10-26-21.png)
 
 再看看**距离-速度公式**：
 
 $$
 y=2140.47\cdot \exp \left( 1.74\cdot \ln \left( \frac{0.35\cdot x}{2140.47} \right) \right)
 $$
-![2021-04-12-10-30-53](https://gitee.com/hanschencoder/Images/raw/master/2021-04-12-10-30-53.png)
+![2021-04-12-10-30-53](http://image.hanschen.site/master/2021-04-12-10-30-53.png)
 
 
 可以看到距离和时长都是随着速度增大而增大的，只不过时长的增长速度在后期会有一定的收敛，保证动画时长不至于太长
@@ -294,7 +294,7 @@ $$
 y=\frac{2140.47\cdot \exp \left( 1.74\cdot \ln \left( \frac{0.35\cdot x}{2140.47} \right) \right)}{1000\cdot \exp \left( \frac{\ln \left( \frac{0.35x}{2140.47} \right)}{1.358} \right)}
 $$
 
-![2021-04-12-10-45-06](https://gitee.com/hanschencoder/Images/raw/master/2021-04-12-10-45-06.png)
+![2021-04-12-10-45-06](http://image.hanschen.site/master/2021-04-12-10-45-06.png)
 
 但是说实话，目前我暂时没想明白这两个公式的物理意义，有明白的大佬求告知~ 难道是利用了对数函数收敛的特性确定了时长公式，然后设定平均速度线性增长后，推导出距离公式？
 
@@ -451,7 +451,7 @@ public class OverScroller {
 
 看代码很难想象它长什么样，直接看看它的图像吧：
 
-![2021-04-12-11-24-04](https://gitee.com/hanschencoder/Images/raw/master/2021-04-12-11-24-04.png)
+![2021-04-12-11-24-04](http://image.hanschen.site/master/2021-04-12-11-24-04.png)
 
 
 也就是说，SPLINE 和 startScroll 很像，位置曲线都是由一根预置的曲线决定的，把预置曲线映射真实的距离，只是 SPLINE 没有使用插值器曲线，而是使用了一根缓停的样条曲线
@@ -545,7 +545,7 @@ $ v_0=0，v_t=at $，那么 $ delta=\frac{at^2} {2} $，$ t=\sqrt{ \frac{2*delta
 
 核心逻辑是这个 `3.0f * t2 - 2.0f * t * t2`, 这其实是一个比较常用的三次曲线：
 
-![2021-04-12-14-34-02](https://gitee.com/hanschencoder/Images/raw/master/2021-04-12-14-34-02.png)
+![2021-04-12-14-34-02](http://image.hanschen.site/master/2021-04-12-14-34-02.png)
 
 
 在 [0, 1] 区间内，是一个缓入缓出的曲线。至此，CUBIC 的运动规律也摸清楚了，在固定时间内，把时间映射到 [0, 1] 的区间，再把 y 坐标映射实际的位置

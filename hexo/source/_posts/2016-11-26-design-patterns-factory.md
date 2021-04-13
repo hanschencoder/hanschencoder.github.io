@@ -137,7 +137,7 @@ public class SimpleFactory {
 ```
 
 好了，到这里我们就完成了简单工厂模式的应用了，下图就是简单工厂模式的结构图：
-![2019-9-2-11-28-47.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-11-28-47.png)
+![2019-9-2-11-28-47.png](http://image.hanschen.site/master/2019-9-2-11-28-47.png)
 
 # 工厂方法模式
 简单工厂模式的优点在于工厂类包含了必要的判断逻辑，根据传入的参数动态实例化相关的类，对于客户端来说，去除了与具体产品的依赖。但是这里还是会有个问题，假设上面例子中新增了一个zigbee发送器，那么一定是需要修改简单工厂类的，也就是说，我们不但对扩展开放了，对修改也开放了，这是不好的。解决的方法是使用工厂方法模式，工厂方法模式是指**定义一个用于创建对象的接口，让子类决定实例化哪一个类**。下面还是通过代码来说明：
@@ -175,7 +175,7 @@ public class BluetoothSenderFactory implements SenderFactory {
 ```
 
 这样，即使有新的Sender实现类加进来，我们只需要新增相应的工厂类就行了，不需要修改原有的工厂，下图就是工厂方法模式的结构图：
-![2019-9-2-11-28-17.png](https://gitee.com/hanschencoder/Images/raw/master/2019-9-2-11-28-17.png)
+![2019-9-2-11-28-17.png](http://image.hanschen.site/master/2019-9-2-11-28-17.png)
 
 客户端调用代码：
 ```java
