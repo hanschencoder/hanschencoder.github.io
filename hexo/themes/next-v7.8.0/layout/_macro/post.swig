@@ -211,6 +211,10 @@
     {### END POST BODY ###}
     {#####################}
 
+    {%- if theme.wechat_subscriber.enable and not is_index %}
+      {{ partial('_partials/post/wechat-subscriber.swig') }}
+    {%- endif %}
+
     {%- if theme.related_posts.enable and (theme.related_posts.display_in_home or not is_index) %}
       {{ partial('_partials/post/post-related.swig') }}
     {%- endif %}

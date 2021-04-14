@@ -10,6 +10,7 @@ categories:
 
 从 Android 7 开始，Android 源码编译时默认使用 Ninja，编译时，会先把 makefile 和 bp 转换成 ninja 再进行编译。这个转换过程非常慢（需要遍历处理所有关联的 makefile、bp 文件），即使只是通过 `mm` 或 `mmm` 编译某个模块，也会有很多因素触发 ninja 文件的重新生成，而这对基于源码开发的模块很不友好，编译好慢！
 
+<!-- more -->
 
 # 2. 初识 ninja
 

@@ -9,6 +9,8 @@ categories:
 # 1. 简介
 使用 Android Studio 查看 Android Framework 代码体验非常好，无论是索引还是界面都让人很满意，但是当你跟踪代码，发现进入 native 逻辑时，就会发现 Android Studio 对 native 代码的支持非常不好，不能索引不支持符号搜索不能跳转等，这些让人非常抓狂。那么如何能在 IDE 愉快地查看 native 代码呢？在 Windows 上，Source Insight 的表现也很好，但苦于只有 Windows 平台支持且界面不好，经过一番折腾，还真是找到了方法，下面我们将一步一步打造丝滑的  native 代码阅读环境。
 
+<!-- more -->
+
 先看一下效果：
 
 ![2019-10-11-15-02-40.gif](http://image.hanschen.site/master/2019-10-11-15-02-40.gif)
