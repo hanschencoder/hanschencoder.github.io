@@ -1,7 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title><![CDATA[Android 12 Letterbox Mode]]></title>
+    <title><![CDATA[Android 12 - 跟踪利器 WinScope]]></title>
+    <url>%2F2021%2F10%2F22%2Fandroid-12-winscope%2F</url>
+    <content type="text"><![CDATA[1. 简介在开发过程中，经常会遇到各种各样的窗口问题，比如动画异常、窗口异常、闪屏、黑屏、错位显示.. 以前对于这些问题，我们可以通过添加日志，调试分析代码等手段去解决，但这些 UI 问题往往出现在一瞬间，很难把握出现的时机，录制下来的日志往往也是巨大的，从海量的日志中提取有效的信息是一个枯燥且繁琐的事情。 Android 也意识到了这个问题，WinScope 的出现有效的帮助我们跟踪窗口和显示问题。它向开发者提供一个可视化的工具，让开发者能使用工具跟踪整个界面的变化过程， 让我们可以观察到细微的变化。 迭代了几个版本后， Android 12 上 WinScope 变得更好用了，下面来看看大概的效果： 2. 工具获取Android 12 平台的 WinScope 工具可以通过源码编译获得， 具体也可以查阅 development/tools/winscope 目录下的 README.md 文档， 这里提供一个 Ubuntu 平台的编译步骤： 123451. cd development/tools/winscope2. sudo apt install nodejs npm3. npm install -g yarn4. yarn install5. yarn build 编译过程中遇到一个问题， 看上去是在执行 kotlin 优化的时候， 报了个内存不足的问题： 1234567891011Caused by: java.lang.OutOfMemoryError: GC overhead limit exceeded at com.google.gwt.dev.js.ScopeContext.referenceFor(ScopeContext.kt:68) at com.google.gwt.dev.js.JsAstMapper.mapAsPropertyNameRef(JsAstMapper.java:247) at com.google.gwt.dev.js.JsAstMapper.mapGetProp(JsAstMapper.java:608) at com.google.gwt.dev.js.JsAstMapper.mapWithoutLocation(JsAstMapper.java:138) at com.google.gwt.dev.js.JsAstMapper.map(JsAstMapper.java:47) at com.google.gwt.dev.js.JsAstMapper.mapExpression(JsAstMapper.java:466) at com.google.gwt.dev.js.JsAstMapper.mapBinaryOperation(JsAstMapper.java:304) at com.google.gwt.dev.js.JsAstMapper.mapAssignmentVariant(JsAstMapper.java:258) at com.google.gwt.dev.js.JsAstMapper.mapWithoutLocation(JsAstMapper.java:102) at com.google.gwt.dev.js.JsAstMapper.map(JsAstMapper.java:47) 可以在执行 yarn build 前通过 export JAVA_OPTS=&quot;-XX:-UseGCOverheadLimit&quot; 禁用掉 GC overhead limit exceeded 检测 编译完之后，在当前目录下会一个 dist 目录， 再把 adb_proxy/winscope_proxy.py(一个帮我们开启 trace 抓取命令的脚本， 这样我们就可以告别繁琐的命令啦)， 文件也拷贝进 dist 目录方便我们后面使用 3. 使用使用比较简单了， 连接手机后： 双击打开 dist 目录下的 index.html 文件 在终端执行 python3 winscope_proxy.py PS： 这里建议大家可以设置个 alias 一键使用，比如： 1alias winscope_s="xdg-open ~/tools/winscope_s/index.html &amp;&amp; python3 ~/tools/winscope_s/winscope_proxy.py" 输入 python 命令后，终端可能会生成一个 token ，把它复制到浏览器即可 接下来就会出现下面这个界面： 在选择 START TRACE 之后， 就可以在手机端进行录制操作，操作完后结束录制即可 4. 功能改进相比与 Android 11， 新的 WinScope 工具在界面上更友好了，重要的改进如下： 时间线控制更加方便了，可以选择不同类型的时间线用于控制，否则像以前录制了 ProtoLog 后，通过箭头控制时间推移简直是太难用了 新的 Transaction 和 Log 浏览界面 支持 Diff 功能， 不得不说每一帧的参数太多了， 如果没有 diff 功能，实在很难一眼看出那些参数发生了变化 新增了 IME 的录制， 可以录制 InputMethodService、InputMethodManagerService 和 Client 的事件 录屏界面可以以 PIP 形式显示在浏览器界面上 … 不得不说确实比以前好用一些，赶紧尝尝鲜吧~]]></content>
+      <categories>
+        <category>Android</category>
+      </categories>
+      <tags>
+        <tag>Android</tag>
+        <tag>Android 12</tag>
+        <tag>Android S</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Android 12 - Letterbox 模式]]></title>
     <url>%2F2021%2F10%2F21%2Fandroid-12-letterbox%2F</url>
     <content type="text"><![CDATA[1. 简介随着越来越多大屏和折叠屏设备出现，很多应用并未对不同尺寸的设备进行 UI 适配，这时候应用选择以特定的宽高比显示（虽然 Google 不建议这这样做，官方还是希望开发者可以对不同的屏幕尺寸进行自适应布局~），当应用的宽高比和它的容器比例不兼容的时候，就会以 Letterbox 模式打开。 Letterbox 模式下界面会以指定的比例显示，周围空白区域可以填充壁纸或者颜色。至于 Letterbox 的外观可受以下因素影响： config_letterboxActivityCornersRadius： 界面圆角大小 config_letterboxBackgroundType： 背景填充类型， 分别有： LETTERBOX_BACKGROUND_APP_COLOR_BACKGROUND： 颜色受 android:colorBackground 影响 LETTERBOX_BACKGROUND_APP_COLOR_BACKGROUND_FLOATING： 颜色受 android:colorBackgroundFloating 影响 LETTERBOX_BACKGROUND_SOLID_COLOR： 颜色受 config_letterboxBackgroundColor 影响 LETTERBOX_BACKGROUND_WALLPAPER： 显示壁纸，此选项和 FLAG_SHOW_WALLPAPER 类似，会导致壁纸窗口显示 config_letterboxBackgroundWallpaperBlurRadius： 壁纸模糊程度 config_letterboxBackgroundWallaperDarkScrimAlpha： 壁纸变暗程度 2. 何时触发Letterbox 的触发条件一般有： android:resizeableActivity=false 且应用声明的宽高比与容器不兼容的时候(如屏幕宽高超出 android:maxAspectRatio) setIgnoreOrientationRequest(true) 系统设置忽略屏幕方向后，以横屏模式下打开一个强制竖屏的界面 3. 实现方案Letterbox 显示的实现并不复杂，Android 12 在 ActivityRecord 中增加了 LetterboxUiController 用以控制 Letterbox 的布局和显示， 先来看看处于 Letterbox 模式时 SurfaceFlinger 状态： 可以看到，跟正常情况相比，除了界面本身的大小和位置被缩放到指定比例外，四周还多了两个 Layer，挂在 ActiviRecord 节点下面， 这两个 Layer 可根据配置进行指定的颜色填充，如果背景是壁纸的话，还可以设置壁纸的 dim 值和模糊程度，这些都可以通过 SurfaceControl 接口轻松实现。 下面简单分析一下代码： 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051// LetterboxUiController.javavoid updateLetterboxSurface(WindowState winHint) &#123; final WindowState w = mActivityRecord.findMainWindow(); if (w != winHint &amp;&amp; winHint != null &amp;&amp; w != null) &#123; return; &#125; // 对界面四周需要显示的 Layer 进行位置计算 layoutLetterbox(winHint); if (mLetterbox != null &amp;&amp; mLetterbox.needsApplySurfaceChanges()) &#123; // 对 Surface 执行创建、参数设置等操作 mLetterbox.applySurfaceChanges(mActivityRecord.getSyncTransaction()); &#125;&#125;void layoutLetterbox(WindowState winHint) &#123; final WindowState w = mActivityRecord.findMainWindow(); if (w == null || winHint != null &amp;&amp; w != winHint) &#123; return; &#125; updateRoundedCorners(w); updateWallpaperForLetterbox(w); // 是否进入 Letterbox 模式的关键判断 if (shouldShowLetterboxUi(w)) &#123; if (mLetterbox == null) &#123; // 把具体逻辑委托给 Letterbox mLetterbox = new Letterbox(() -&gt; mActivityRecord.makeChildSurface(null), mActivityRecord.mWmService.mTransactionFactory, mLetterboxConfiguration::isLetterboxActivityCornersRounded, this::getLetterboxBackgroundColor, this::hasWallpaperBackgroudForLetterbox, this::getLetterboxWallpaperBlurRadius, this::getLetterboxWallpaperDarkScrimAlpha); mLetterbox.attachInput(w); &#125; mActivityRecord.getPosition(mTmpPoint); // Get the bounds of the "space-to-fill". The transformed bounds have the highest // priority because the activity is launched in a rotated environment. In multi-window // mode, the task-level represents this. In fullscreen-mode, the task container does // (since the orientation letterbox is also applied to the task). final Rect transformedBounds = mActivityRecord.getFixedRotationTransformDisplayBounds(); final Rect spaceToFill = transformedBounds != null ? transformedBounds : mActivityRecord.inMultiWindowMode() ? mActivityRecord.getRootTask().getBounds() : mActivityRecord.getRootTask().getParent().getBounds(); // 位置计算 mLetterbox.layout(spaceToFill, w.getFrame(), mTmpPoint); &#125; else if (mLetterbox != null) &#123; mLetterbox.hide(); &#125;&#125; 1234567891011121314151617181920212223242526272829303132// Letterbox.LetterboxSurface.javapublic void applySurfaceChanges(SurfaceControl.Transaction t) &#123; if (!needsApplySurfaceChanges()) &#123; // Nothing changed. return; &#125; mSurfaceFrameRelative.set(mLayoutFrameRelative); if (!mSurfaceFrameRelative.isEmpty()) &#123; if (mSurface == null) &#123; // 创建挂在 ActivityRecord 节点下的 Surface， 设置为 ColorLayer 类型 createSurface(t); &#125; // 设置颜色、位置、裁剪 mColor = mColorSupplier.get(); t.setColor(mSurface, getRgbColorArray()); t.setPosition(mSurface, mSurfaceFrameRelative.left, mSurfaceFrameRelative.top); t.setWindowCrop(mSurface, mSurfaceFrameRelative.width(), mSurfaceFrameRelative.height()); // 对壁纸背景设置透明度和模糊度 mHasWallpaperBackground = mHasWallpaperBackgroundSupplier.get(); updateAlphaAndBlur(t); t.show(mSurface); &#125; else if (mSurface != null) &#123; t.hide(mSurface); &#125; if (mSurface != null &amp;&amp; mInputInterceptor != null) &#123; mInputInterceptor.updateTouchableRegion(mSurfaceFrameRelative); t.setInputWindowInfo(mSurface, mInputInterceptor.mWindowHandle); &#125;&#125; 4. 小结本文只是简单分析了下 Letterbox 模式的触发条件和显示的大概逻辑，还有很多细节没有涉及，比如详细的触发逻辑判断可以查看 LetterboxUiController#shouldShowLetterboxUi 方法]]></content>
       <categories>
@@ -321,8 +334,8 @@
         <category>杂七杂八</category>
       </categories>
       <tags>
-        <tag>非对称加密</tag>
         <tag>keytool,rsa</tag>
+        <tag>非对称加密</tag>
         <tag>证书生成</tag>
       </tags>
   </entry>
@@ -346,9 +359,9 @@
         <category>杂七杂八</category>
       </categories>
       <tags>
+        <tag>非对称加密</tag>
         <tag>https</tag>
         <tag>rsa</tag>
-        <tag>非对称加密</tag>
       </tags>
   </entry>
   <entry>

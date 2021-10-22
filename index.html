@@ -143,7 +143,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">31</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">32</span></a>
 
   </li>
         <li class="menu-item menu-item-about">
@@ -207,6 +207,135 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.hanschen.site/2021/10/22/android-12-winscope/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="chenhang">
+      <meta itemprop="description" content="博观而约取，厚积而薄发。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HansChen 的博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/10/22/android-12-winscope/" class="post-title-link" itemprop="url">Android 12 - 跟踪利器 WinScope</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-10-22 00:00:00 / 修改时间：15:36:34" itemprop="dateCreated datePublished" datetime="2021-10-22T00:00:00+08:00">2021-10-22</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/10/22/android-12-winscope/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/10/22/android-12-winscope/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-简介"><a href="#1-简介" class="headerlink" title="1. 简介"></a>1. 简介</h1><p>在开发过程中，经常会遇到各种各样的窗口问题，比如动画异常、窗口异常、闪屏、黑屏、错位显示..</p>
+<p>以前对于这些问题，我们可以通过添加日志，调试分析代码等手段去解决，但这些 UI 问题往往出现在一瞬间，很难把握出现的时机，录制下来的日志往往也是巨大的，从海量的日志中提取有效的信息是一个枯燥且繁琐的事情。</p>
+<p>Android 也意识到了这个问题，<code>WinScope</code> 的出现有效的帮助我们跟踪窗口和显示问题。它向开发者提供一个可视化的工具，让开发者能使用工具跟踪整个界面的变化过程， 让我们可以观察到细微的变化。 迭代了几个版本后， Android 12 上 WinScope 变得更好用了，下面来看看大概的效果：</p>
+<p><img src="http://image.hanschen.site/master/2021-10-22-14-26-57.png" alt="2021-10-22-14-26-57"></p>
+<h1 id="2-工具获取"><a href="#2-工具获取" class="headerlink" title="2. 工具获取"></a>2. 工具获取</h1><p>Android 12 平台的 <code>WinScope</code> 工具可以通过源码编译获得， 具体也可以查阅 <code>development/tools/winscope</code> 目录下的 README.md 文档， 这里提供一个 Ubuntu 平台的编译步骤：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1. <span class="built_in">cd</span> development/tools/winscope</span><br><span class="line">2. sudo apt install nodejs npm</span><br><span class="line">3. npm install -g yarn</span><br><span class="line">4. yarn install</span><br><span class="line">5. yarn build</span><br></pre></td></tr></table></figure>
+
+<p>编译过程中遇到一个问题， 看上去是在执行 kotlin 优化的时候， 报了个内存不足的问题：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Caused by: java.lang.OutOfMemoryError: GC overhead <span class="built_in">limit</span> exceeded</span><br><span class="line">	at com.google.gwt.dev.js.ScopeContext.referenceFor(ScopeContext.kt:68)</span><br><span class="line">	at com.google.gwt.dev.js.JsAstMapper.mapAsPropertyNameRef(JsAstMapper.java:247)</span><br><span class="line">	at com.google.gwt.dev.js.JsAstMapper.mapGetProp(JsAstMapper.java:608)</span><br><span class="line">	at com.google.gwt.dev.js.JsAstMapper.mapWithoutLocation(JsAstMapper.java:138)</span><br><span class="line">	at com.google.gwt.dev.js.JsAstMapper.map(JsAstMapper.java:47)</span><br><span class="line">	at com.google.gwt.dev.js.JsAstMapper.mapExpression(JsAstMapper.java:466)</span><br><span class="line">	at com.google.gwt.dev.js.JsAstMapper.mapBinaryOperation(JsAstMapper.java:304)</span><br><span class="line">	at com.google.gwt.dev.js.JsAstMapper.mapAssignmentVariant(JsAstMapper.java:258)</span><br><span class="line">	at com.google.gwt.dev.js.JsAstMapper.mapWithoutLocation(JsAstMapper.java:102)</span><br><span class="line">	at com.google.gwt.dev.js.JsAstMapper.map(JsAstMapper.java:47)</span><br></pre></td></tr></table></figure>
+
+<p>可以在执行 yarn build 前通过 <code>export JAVA_OPTS=&quot;-XX:-UseGCOverheadLimit&quot;</code> 禁用掉 <code>GC overhead limit exceeded</code> 检测</p>
+<p>编译完之后，在当前目录下会一个 <code>dist</code> 目录， 再把 <code>adb_proxy/winscope_proxy.py</code>(一个帮我们开启 trace 抓取命令的脚本， 这样我们就可以告别繁琐的命令啦)， 文件也拷贝进 <code>dist</code> 目录方便我们后面使用</p>
+<h1 id="3-使用"><a href="#3-使用" class="headerlink" title="3. 使用"></a>3. 使用</h1><p>使用比较简单了， 连接手机后： </p>
+<ul>
+<li>双击打开 <code>dist</code> 目录下的 <code>index.html</code> 文件</li>
+<li>在终端执行 <code>python3 winscope_proxy.py</code></li>
+</ul>
+<p>PS： 这里建议大家可以设置个 alias 一键使用，比如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">alias</span> winscope_s=<span class="string">"xdg-open ~/tools/winscope_s/index.html &amp;&amp; python3 ~/tools/winscope_s/winscope_proxy.py"</span></span><br></pre></td></tr></table></figure>
+
+<p>输入 python 命令后，终端可能会生成一个 <code>token</code> ，把它复制到浏览器即可</p>
+<p>接下来就会出现下面这个界面：</p>
+<p><img src="http://image.hanschen.site/master/2021-10-22-14-32-16.png" alt="2021-10-22-14-32-16"></p>
+<p>在选择 <code>START TRACE</code> 之后， 就可以在手机端进行录制操作，操作完后结束录制即可</p>
+<h1 id="4-功能改进"><a href="#4-功能改进" class="headerlink" title="4. 功能改进"></a>4. 功能改进</h1><p>相比与 Android 11， 新的 <code>WinScope</code> 工具在界面上更友好了，重要的改进如下：</p>
+<ul>
+<li>时间线控制更加方便了，可以选择不同类型的时间线用于控制，否则像以前录制了 <code>ProtoLog</code> 后，通过箭头控制时间推移简直是太难用了</li>
+<li>新的 <code>Transaction</code> 和 <code>Log</code> 浏览界面</li>
+<li>支持 Diff 功能， 不得不说每一帧的参数太多了， 如果没有 diff 功能，实在很难一眼看出那些参数发生了变化</li>
+<li>新增了 IME 的录制， 可以录制 <code>InputMethodService</code>、<code>InputMethodManagerService</code> 和 <code>Client</code> 的事件</li>
+<li>录屏界面可以以 PIP 形式显示在浏览器界面上</li>
+<li>…</li>
+</ul>
+<p>不得不说确实比以前好用一些，赶紧尝尝鲜吧~</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://blog.hanschen.site/2021/10/21/android-12-letterbox/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -221,7 +350,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2021/10/21/android-12-letterbox/" class="post-title-link" itemprop="url">Android 12 Letterbox Mode</a>
+            <a href="/2021/10/21/android-12-letterbox/" class="post-title-link" itemprop="url">Android 12 - Letterbox 模式</a>
         </h2>
 
         <div class="post-meta">
@@ -238,7 +367,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-22 11:36:24" itemprop="dateModified" datetime="2021-10-22T11:36:24+08:00">2021-10-22</time>
+                <time title="修改时间：2021-10-22 14:09:32" itemprop="dateModified" datetime="2021-10-22T14:09:32+08:00">2021-10-22</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1215,135 +1344,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://blog.hanschen.site/2016/12/27/pattern_proxy/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="chenhang">
-      <meta itemprop="description" content="博观而约取，厚积而薄发。">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="HansChen 的博客">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2016/12/27/pattern_proxy/" class="post-title-link" itemprop="url">设计模式之代理模式</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2016-12-27 00:00:00" itemprop="dateCreated datePublished" datetime="2016-12-27T00:00:00+08:00">2016-12-27</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-21 09:42:39" itemprop="dateModified" datetime="2021-10-21T09:42:39+08:00">2021-10-21</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/设计模式/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="fa fa-comment-o"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2016/12/27/pattern_proxy/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2016/12/27/pattern_proxy/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>4k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>4 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>我们执行一个功能的函数时，经常需要在其中写入与功能不是直接相关但很有必要的代码，如日志记录、信息发送、安全和事务支持等，这些<code>枝节性代码</code>虽然是必要的，但它会带来以下麻烦：</p>
-<ul>
-<li>枝节性代码游离在功能性代码之外，它下是函数的目的</li>
-<li>枝节性代码会造成功能性代码对其它类的依赖，加深类之间的耦合</li>
-<li>枝节性代码带来的耦合度会造成功能性代码移植困难，可重用性降低</li>
-</ul>
-<p>毫无疑问，枝节性代码和功能性代码需要分开来才能降低耦合程度，我们可以使用<strong>代理模式(委托模式)</strong>完成这个要求。代理模式的作用是：为其它对象提供一种代理以控制对这个对象的访问。在某些情况下，一 个客户不想直接引用另一个对象，而代理对象可以在客户端和目标对象之间起到中介作用。</p>
-<p>代理模式一般涉及到三个角色：</p>
-<ul>
-<li><strong>抽象角色</strong>：声明真实对象和代理对象的共同接口</li>
-<li><strong>代理角色</strong>：代理对象内部包含有真实角色的引用，从而可以操作真实角色，同时代理对象 与真实对象有相同的接口，能在任何时候代替真实对象，代理对象可以在执行真实对 象前后加入特定的逻辑以实现功能的扩展。</li>
-<li><strong>真实角色</strong>：代理角色所代表的真实对象，是我们最终要引用的对象</li>
-</ul>
-<p>常见的代理应用场景有：</p>
-<ul>
-<li><strong>远程代理</strong>：对一个位于不同的地址空间对象提供一个局域代表对象，如RMI中的stub</li>
-<li><strong>虚拟代理</strong>：根据需要将一个资源消耗很大或者比较复杂的对象，延迟加载，在真正需要的时候才创建</li>
-<li><strong>保护代理</strong>：控制对一个对象的访问权限</li>
-<li><strong>智能引用</strong>：提供比目标对象额外的服务和功能</li>
-</ul>
-<p>接下来，我们用代码来说明什么是代理模式</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2016/12/27/pattern_proxy/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1415,7 +1415,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-count">32</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1476,13 +1476,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">284k</span>
+    <span title="站点总字数">286k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">4:18</span>
+    <span title="站点阅读时长">4:20</span>
 </div>
 
         
