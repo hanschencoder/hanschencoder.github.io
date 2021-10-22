@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="bMH0URCoOdzdhSMyGeDuGebWiSxHnJsOLundsaPEZbc">
+  <meta name="msvalidate.01" content="EC8F55291A196E9DD39DDDB134E93A69">
+  <meta name="baidu-site-verification" content="QC6bRBu8qm">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.hanschen.site","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="概述在Fragment使用中，有时候需要对Fragment进行add、remove、show、hide、replace等操作来进行Fragment的显示隐藏等管理，这些管理是通过FragmentTransaction进行事务管理的。事务管理是对于一系列操作进行管理，一个事务包含一个或多个操作命令，是逻辑管理的工作单元。一个事务开始于第一次执行操作语句，结束于Commit。通俗地将，就是把多个操作缓">
+<meta name="keywords" content="Fragment,事务管理,transaction,源码分析">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Fragment事务管理源码分析">
+<meta property="og:url" content="http://blog.hanschen.site/2016/11/11/fragment-transaction/index.html">
+<meta property="og:site_name" content="HansChen 的博客">
+<meta property="og:description" content="概述在Fragment使用中，有时候需要对Fragment进行add、remove、show、hide、replace等操作来进行Fragment的显示隐藏等管理，这些管理是通过FragmentTransaction进行事务管理的。事务管理是对于一系列操作进行管理，一个事务包含一个或多个操作命令，是逻辑管理的工作单元。一个事务开始于第一次执行操作语句，结束于Commit。通俗地将，就是把多个操作缓">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-11-19-20.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-11-20-42.png">
+<meta property="og:updated_time" content="2021-10-21T01:42:39.219Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Fragment事务管理源码分析">
+<meta name="twitter:description" content="概述在Fragment使用中，有时候需要对Fragment进行add、remove、show、hide、replace等操作来进行Fragment的显示隐藏等管理，这些管理是通过FragmentTransaction进行事务管理的。事务管理是对于一系列操作进行管理，一个事务包含一个或多个操作命令，是逻辑管理的工作单元。一个事务开始于第一次执行操作语句，结束于Commit。通俗地将，就是把多个操作缓">
+<meta name="twitter:image" content="http://image.hanschen.site/master/2019-9-2-11-19-20.png">
+
+<link rel="canonical" href="http://blog.hanschen.site/2016/11/11/fragment-transaction/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Fragment事务管理源码分析 | HansChen 的博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?cae9425eed9e207f553597421f71ddad";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">HansChen 的博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类<span class="badge">8</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签<span class="badge">61</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">31</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/shensky711" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.hanschen.site/2016/11/11/fragment-transaction/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="chenhang">
+      <meta itemprop="description" content="博观而约取，厚积而薄发。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HansChen 的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Fragment事务管理源码分析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2016-11-11 00:00:00" itemprop="dateCreated datePublished" datetime="2016-11-11T00:00:00+08:00">2016-11-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-10-21 09:42:39" itemprop="dateModified" datetime="2021-10-21T09:42:39+08:00">2021-10-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2016/11/11/fragment-transaction/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2016/11/11/fragment-transaction/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>13k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>12 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>在Fragment使用中，有时候需要对Fragment进行<code>add</code>、<code>remove</code>、<code>show</code>、<code>hide</code>、<code>replace</code>等操作来进行Fragment的显示隐藏等管理，这些管理是通过<code>FragmentTransaction</code>进行事务管理的。事务管理是对于一系列操作进行管理，一个事务包含一个或多个操作命令，是逻辑管理的工作单元。一个事务开始于第一次执行操作语句，结束于Commit。通俗地将，就是把多个操作缓存起来，等调用commit的时候，统一批处理。下面会对Fragmeng的事务管理做一个代码分析</p>
+<a id="more"></a>
+
+<h1 id="分析入口"><a href="#分析入口" class="headerlink" title="分析入口"></a>分析入口</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 显示Fragment，如果Fragment已添加过，则直接show，否则构造一个Fragment</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> containerViewId 容器控件id</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> clz             Fragment类</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">showFragment</span><span class="params">(@IdRes <span class="keyword">int</span> containerViewId, Class&lt;? extends Fragment&gt; clz)</span> </span>&#123;</span><br><span class="line">    FragmentManager fm = getFragmentManager();</span><br><span class="line">    FragmentTransaction ft = fm.beginTransaction();<span class="comment">//开始事务管理</span></span><br><span class="line">    Fragment f;</span><br><span class="line">    <span class="keyword">if</span> ((f = fm.findFragmentByTag(clz.getName())) == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            f = clz.newInstance();</span><br><span class="line">            ft.add(containerViewId, f, clz.getName());<span class="comment">//添加操作</span></span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        ft.show(f);<span class="comment">//添加操作</span></span><br><span class="line">    &#125;</span><br><span class="line">    ft.commit();<span class="comment">//提交事务</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面是一个简单的显示Fragment的栗子，简单判断一下Fragment是否已添加过，添加过就直接show，否则构造一个Fragment，最后提交事务。</p>
+<h1 id="代码分析"><a href="#代码分析" class="headerlink" title="代码分析"></a>代码分析</h1><h2 id="FragmentManager"><a href="#FragmentManager" class="headerlink" title="FragmentManager"></a>FragmentManager</h2><p><img src="http://image.hanschen.site/master/2019-9-2-11-19-20.png" alt="2019-9-2-11-19-20.png"><br>上图是获取FragmentManager的大体过程</p>
+<p>要管理Fragment事务，首先是需要拿到FragmentManager，在Activity中可以通过<code>getFragmentManager()</code>方法获取(使用兼容包的话，通过<code>FragmentActivity#getSupportFragmentManager()</code>)，在这里我们就不对兼容包进行分析了</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> FragmentController mFragments = FragmentController.createController(<span class="keyword">new</span> HostCallbacks());</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Return the FragmentManager for interacting with fragments associated</span></span><br><span class="line"><span class="comment"> * with this activity.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> FragmentManager <span class="title">getFragmentManager</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> mFragments.getFragmentManager();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>FragmentManager是一个抽象类，它是通过mFragments.getFragmentManager()来获取的，mFragments是FragmentController对象，它通过<code>FragmentController.createController(new HostCallbacks())</code>生成，这是一个静态工厂方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> FragmentController <span class="title">createController</span><span class="params">(FragmentHostCallback&lt;?&gt; callbacks)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> FragmentController(callbacks);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在这里面直接new了一个FragmentController对象，注意FragmentController的构造方法需要传入一个<code>FragmentHostCallback</code></p>
+<h2 id="FragmentController构造方法"><a href="#FragmentController构造方法" class="headerlink" title="FragmentController构造方法"></a>FragmentController构造方法</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> FragmentHostCallback&lt;?&gt; mHost;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="title">FragmentController</span><span class="params">(FragmentHostCallback&lt;?&gt; callbacks)</span> </span>&#123;</span><br><span class="line">    mHost = callbacks;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>构造方法很简单，传入了一个FragmentHostCallback实例</p>
+<h2 id="FragmentController-getFragmentManager"><a href="#FragmentController-getFragmentManager" class="headerlink" title="FragmentController#getFragmentManager"></a>FragmentController#getFragmentManager</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> FragmentManager <span class="title">getFragmentManager</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> mHost.getFragmentManagerImpl();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里又调用了mHost的getFragmentManagerImpl方法，希望童鞋们没有被绕晕，mHost是一个FragmentHostCallback实例，那我们回过头来看看它传进来的地方</p>
+<h2 id="FragmentHostCallback"><a href="#FragmentHostCallback" class="headerlink" title="FragmentHostCallback"></a>FragmentHostCallback</h2><p>这个FragmentHostCallback是一个抽象类，我们可以看到，在Activity中是传入了 <code>Activity#HostCallbacks</code>内部类，这个就是FragmentHostCallback的实现类</p>
+<h2 id="FragmentHostCallback-getFragmentManagerImpl"><a href="#FragmentHostCallback-getFragmentManagerImpl" class="headerlink" title="FragmentHostCallback#getFragmentManagerImpl"></a>FragmentHostCallback#getFragmentManagerImpl</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> FragmentManagerImpl mFragmentManager = <span class="keyword">new</span> FragmentManagerImpl();</span><br><span class="line"><span class="function">FragmentManagerImpl <span class="title">getFragmentManagerImpl</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> mFragmentManager;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>终于找到FragmentManager的真身<code>FragmentManagerImpl</code>了</p>
+<h2 id="FragmentManagerImpl-beginTransaction"><a href="#FragmentManagerImpl-beginTransaction" class="headerlink" title="FragmentManagerImpl#beginTransaction"></a>FragmentManagerImpl#beginTransaction</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> FragmentTransaction <span class="title">beginTransaction</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> BackStackRecord(<span class="keyword">this</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，所谓的FragmentTransaction其实就是一个BackStackRecord。到现在，FragmentManager和FragmentTransaction我们都找到了。下图就是各个类之间的关系：<br><img src="http://image.hanschen.site/master/2019-9-2-11-20-42.png" alt="2019-9-2-11-20-42.png"></p>
+<p>下面开始真正的事务管理分析，我们先选择一个事务add来进行分析</p>
+<h2 id="FragmentTransaction-add"><a href="#FragmentTransaction-add" class="headerlink" title="FragmentTransaction#add"></a>FragmentTransaction#add</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> FragmentTransaction <span class="title">add</span><span class="params">(<span class="keyword">int</span> containerViewId, Fragment fragment, String tag)</span> </span>&#123;</span><br><span class="line">    doAddOp(containerViewId, fragment, tag, OP_ADD);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">doAddOp</span><span class="params">(<span class="keyword">int</span> containerViewId, Fragment fragment, String tag, <span class="keyword">int</span> opcmd)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//设置fragment的FragmentManagerImpl，mManager其实就是Activity#HostCallbacks中的成员变量</span></span><br><span class="line">    fragment.mFragmentManager = mManager;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//设置fragment的tag</span></span><br><span class="line">    <span class="keyword">if</span> (tag != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (fragment.mTag != <span class="keyword">null</span> &amp;&amp; !tag.equals(fragment.mTag)) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"..."</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        fragment.mTag = tag;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (containerViewId != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (containerViewId == View.NO_ID) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"..."</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (fragment.mFragmentId != <span class="number">0</span> &amp;&amp; fragment.mFragmentId != containerViewId) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">""</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//设置fragment的mContainerId以及mFragmentId</span></span><br><span class="line">        fragment.mContainerId = fragment.mFragmentId = containerViewId;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//新增一个操作</span></span><br><span class="line">    Op op = <span class="keyword">new</span> Op();</span><br><span class="line">    op.cmd = opcmd;</span><br><span class="line">    op.fragment = fragment;</span><br><span class="line">    <span class="comment">//添加操作</span></span><br><span class="line">    addOp(op);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//插入到链表的最后</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">addOp</span><span class="params">(Op op)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (mHead == <span class="keyword">null</span>) &#123;</span><br><span class="line">        mHead = mTail = op;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        op.prev = mTail;</span><br><span class="line">        mTail.next = op;</span><br><span class="line">        mTail = op;</span><br><span class="line">    &#125;</span><br><span class="line">    op.enterAnim = mEnterAnim;</span><br><span class="line">    op.exitAnim = mExitAnim;</span><br><span class="line">    op.popEnterAnim = mPopEnterAnim;</span><br><span class="line">    op.popExitAnim = mPopExitAnim;</span><br><span class="line">    mNumOp++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>add的操作步骤为：</p>
+<ol>
+<li>设置fragment的FragmentManagerImpl</li>
+<li>设置fragment的tag</li>
+<li>设置fragment的mContainerId以及mFragmentId</li>
+<li>插入一个类型为OP_ADD的操作到链表最后</li>
+</ol>
+<p>这里用到了一个类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">Op</span> </span>&#123;</span><br><span class="line">    Op next;<span class="comment">//下一操作节点</span></span><br><span class="line">    Op prev;<span class="comment">//上一操作节点</span></span><br><span class="line">    <span class="keyword">int</span> cmd;<span class="comment">//操作类型，可选有：OP_NULL|OP_ADD|OP_REPLACE|OP_REMOVE|OP_HIDE|OP_SHOW|OP_DETACH|OP_ATTACH</span></span><br><span class="line">    Fragment fragment;<span class="comment">//操作的Fragment对象</span></span><br><span class="line">    <span class="keyword">int</span> enterAnim;<span class="comment">//入场动画</span></span><br><span class="line">    <span class="keyword">int</span> exitAnim;<span class="comment">//出场动画</span></span><br><span class="line">    <span class="keyword">int</span> popEnterAnim;<span class="comment">//弹入动画</span></span><br><span class="line">    <span class="keyword">int</span> popExitAnim;<span class="comment">//弹出动画</span></span><br><span class="line">    ArrayList&lt;Fragment&gt; removed;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这是一个操作链表节点。所有add、remove、hide等事物最终会形成一个操作链</p>
+<h2 id="FragmentTransaction-commit"><a href="#FragmentTransaction-commit" class="headerlink" title="FragmentTransaction#commit"></a>FragmentTransaction#commit</h2><p>等所有操作都插入后，最后我们需要调用FragmentTransaction的commit方法，操作才会真正地执行。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">commit</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> commitInternal(<span class="keyword">false</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">commitInternal</span><span class="params">(<span class="keyword">boolean</span> allowStateLoss)</span> </span>&#123;</span><br><span class="line">    <span class="comment">//防止重复commit</span></span><br><span class="line">    <span class="keyword">if</span> (mCommitted) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"commit already called"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//DEBUG代码统统不管</span></span><br><span class="line">    <span class="keyword">if</span> (FragmentManagerImpl.DEBUG) &#123;</span><br><span class="line">        Log.v(TAG, <span class="string">"Commit: "</span> + <span class="keyword">this</span>);</span><br><span class="line">        LogWriter logw = <span class="keyword">new</span> LogWriter(Log.VERBOSE, TAG);</span><br><span class="line">        PrintWriter pw = <span class="keyword">new</span> FastPrintWriter(logw, <span class="keyword">false</span>, <span class="number">1024</span>);</span><br><span class="line">        dump(<span class="string">"  "</span>, <span class="keyword">null</span>, pw, <span class="keyword">null</span>);</span><br><span class="line">        pw.flush();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    mCommitted = <span class="keyword">true</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//只有调用了addToBackStack方法之后，这个标记才会为true</span></span><br><span class="line">    <span class="keyword">if</span> (mAddToBackStack) &#123;</span><br><span class="line">        mIndex = mManager.allocBackStackIndex(<span class="keyword">this</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        mIndex = -<span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//插入事物队列</span></span><br><span class="line">    mManager.enqueueAction(<span class="keyword">this</span>, allowStateLoss);</span><br><span class="line">    <span class="keyword">return</span> mIndex;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="FragmentManagerImpl-enqueueAction"><a href="#FragmentManagerImpl-enqueueAction" class="headerlink" title="FragmentManagerImpl#enqueueAction"></a>FragmentManagerImpl#enqueueAction</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Adds an action to the queue of pending actions.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> action the action to add</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> allowStateLoss whether to allow loss of state information</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@throws</span> IllegalStateException if the activity has been destroyed</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">enqueueAction</span><span class="params">(Runnable action, <span class="keyword">boolean</span> allowStateLoss)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!allowStateLoss) &#123;</span><br><span class="line">        checkStateLoss();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (mDestroyed || mHost == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Activity has been destroyed"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (mPendingActions == <span class="keyword">null</span>) &#123;</span><br><span class="line">            mPendingActions = <span class="keyword">new</span> ArrayList&lt;Runnable&gt;();</span><br><span class="line">        &#125;</span><br><span class="line">        mPendingActions.add(action);</span><br><span class="line">        <span class="keyword">if</span> (mPendingActions.size() == <span class="number">1</span>) &#123;</span><br><span class="line">            mHost.getHandler().removeCallbacks(mExecCommit);</span><br><span class="line">            mHost.getHandler().post(mExecCommit);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里把操作添加到<code>mPendingActions</code>列表里去。并通过mHost.getHandler()获取Handler发送执行请求。从上面的分析知道，mHost就是Activity的HostCallbacks，构造方法中把Activity的mHandler传进去了，这里执行的<code>mHost.getHandler()</code>获取到的也就是Activity中的mHandler，这样做是因为需要在主线程中执行</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> Handler mHandler = <span class="keyword">new</span> Handler();</span><br></pre></td></tr></table></figure>
+
+<p>再看看mExecCommit中做了什么操作：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line">Runnable mExecCommit = <span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        execPendingActions();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Only call from main thread!</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">execPendingActions</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (mExecutingActions) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Recursive entry to executePendingTransactions"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//再次检测是否主线程</span></span><br><span class="line">    <span class="keyword">if</span> (Looper.myLooper() != mHost.getHandler().getLooper()) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Must be called from main thread of process"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">boolean</span> didSomething = <span class="keyword">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">        <span class="keyword">int</span> numActions;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">        </span><br><span class="line">            <span class="comment">//参数检测</span></span><br><span class="line">            <span class="keyword">if</span> (mPendingActions == <span class="keyword">null</span> || mPendingActions.size() == <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            numActions = mPendingActions.size();</span><br><span class="line">            <span class="keyword">if</span> (mTmpActions == <span class="keyword">null</span> || mTmpActions.length &lt; numActions) &#123;</span><br><span class="line">                mTmpActions = <span class="keyword">new</span> Runnable[numActions];</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            mPendingActions.toArray(mTmpActions);</span><br><span class="line">            mPendingActions.clear();</span><br><span class="line">            mHost.getHandler().removeCallbacks(mExecCommit);</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        mExecutingActions = <span class="keyword">true</span>;</span><br><span class="line">        <span class="comment">//遍历执行待处理的事务操作</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>; i&lt;numActions; i++) &#123;</span><br><span class="line">            mTmpActions[i].run();</span><br><span class="line">            mTmpActions[i] = <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        mExecutingActions = <span class="keyword">false</span>;</span><br><span class="line">        didSomething = <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    doPendingDeferredStart();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> didSomething;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>插入了事物之后，就是在主线程中把需要处理的事务统一处理，处理事务是通过执行<code>mTmpActions[i].run()</code>进行的，这个mTmpActions[i]就是前面我们通过enqueueAction方法插入的BackStackRecord，童鞋们可能没注意到，它可是一个Runnable，我们来看看它的定义</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">BackStackRecord</span> <span class="keyword">extends</span> <span class="title">FragmentTransaction</span> <span class="keyword">implements</span></span></span><br><span class="line"><span class="class">        <span class="title">FragmentManager</span>.<span class="title">BackStackEntry</span>, <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> String TAG = FragmentManagerImpl.TAG;</span><br><span class="line">    </span><br><span class="line">    ... ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>兜兜转转，我们又回到了BackStackRecord</p>
+<h2 id="BackStackRecord-run"><a href="#BackStackRecord-run" class="headerlink" title="BackStackRecord#run"></a>BackStackRecord#run</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    ......</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (mManager.mCurState &gt;= Fragment.CREATED) &#123;</span><br><span class="line">        SparseArray&lt;Fragment&gt; firstOutFragments = <span class="keyword">new</span> SparseArray&lt;Fragment&gt;();</span><br><span class="line">        SparseArray&lt;Fragment&gt; lastInFragments = <span class="keyword">new</span> SparseArray&lt;Fragment&gt;();</span><br><span class="line">        calculateFragments(firstOutFragments, lastInFragments);</span><br><span class="line">        beginTransition(firstOutFragments, lastInFragments, <span class="keyword">false</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//遍历链表，根据cmd事务类型依次处理事务</span></span><br><span class="line">    Op op = mHead;</span><br><span class="line">    <span class="keyword">while</span> (op != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">switch</span> (op.cmd) &#123;</span><br><span class="line">            <span class="keyword">case</span> OP_ADD: &#123;</span><br><span class="line">                Fragment f = op.fragment;</span><br><span class="line">                f.mNextAnim = op.enterAnim;</span><br><span class="line">                mManager.addFragment(f, <span class="keyword">false</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> OP_REPLACE: &#123;</span><br><span class="line">                Fragment f = op.fragment;</span><br><span class="line">                <span class="keyword">int</span> containerId = f.mContainerId;</span><br><span class="line">                <span class="keyword">if</span> (mManager.mAdded != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    <span class="keyword">for</span> (<span class="keyword">int</span> i = mManager.mAdded.size() - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i--) &#123;</span><br><span class="line">                        Fragment old = mManager.mAdded.get(i);</span><br><span class="line">                        <span class="keyword">if</span> (old.mContainerId == containerId) &#123;</span><br><span class="line">                            <span class="keyword">if</span> (old == f) &#123;</span><br><span class="line">                                op.fragment = f = <span class="keyword">null</span>;</span><br><span class="line">                            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                                <span class="keyword">if</span> (op.removed == <span class="keyword">null</span>) &#123;</span><br><span class="line">                                    op.removed = <span class="keyword">new</span> ArrayList&lt;Fragment&gt;();</span><br><span class="line">                                &#125;</span><br><span class="line">                                op.removed.add(old);</span><br><span class="line">                                old.mNextAnim = op.exitAnim;</span><br><span class="line">                                <span class="keyword">if</span> (mAddToBackStack) &#123;</span><br><span class="line">                                    old.mBackStackNesting += <span class="number">1</span>;</span><br><span class="line">                                &#125;</span><br><span class="line">                                mManager.removeFragment(old, mTransition, mTransitionStyle);</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (f != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    f.mNextAnim = op.enterAnim;</span><br><span class="line">                    mManager.addFragment(f, <span class="keyword">false</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> OP_REMOVE: &#123;</span><br><span class="line">                Fragment f = op.fragment;</span><br><span class="line">                f.mNextAnim = op.exitAnim;</span><br><span class="line">                mManager.removeFragment(f, mTransition, mTransitionStyle);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> OP_HIDE: &#123;</span><br><span class="line">                Fragment f = op.fragment;</span><br><span class="line">                f.mNextAnim = op.exitAnim;</span><br><span class="line">                mManager.hideFragment(f, mTransition, mTransitionStyle);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> OP_SHOW: &#123;</span><br><span class="line">                Fragment f = op.fragment;</span><br><span class="line">                f.mNextAnim = op.enterAnim;</span><br><span class="line">                mManager.showFragment(f, mTransition, mTransitionStyle);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> OP_DETACH: &#123;</span><br><span class="line">                Fragment f = op.fragment;</span><br><span class="line">                f.mNextAnim = op.exitAnim;</span><br><span class="line">                mManager.detachFragment(f, mTransition, mTransitionStyle);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> OP_ATTACH: &#123;</span><br><span class="line">                Fragment f = op.fragment;</span><br><span class="line">                f.mNextAnim = op.enterAnim;</span><br><span class="line">                mManager.attachFragment(f, mTransition, mTransitionStyle);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">default</span>: &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Unknown cmd: "</span> + op.cmd);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        op = op.next;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    mManager.moveToState(mManager.mCurState, mTransition,</span><br><span class="line">            mTransitionStyle, <span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (mAddToBackStack) &#123;</span><br><span class="line">        mManager.addBackStackState(<span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>到这一步，提交的事务就被真正执行了，我们知道，即使commit了事务之后，也不是同步执行的，是通过Handler发送到主线程执行的。</p>
+<p>所有事务的处理都是在run方法里面执行，但是我们留意到，想要搞清楚add、remove等事务背后真正做了什么，还需要深入了解FragmentManagerImpl。</p>
+<p>本文主要讲解Fragment事务的流程，FragmentManagerImpl的分析准备放到下一篇分析文章<a href="http://blog.csdn.net/shensky711/article/details/53171248" target="_blank" rel="noopener">Fragment源码分析</a>中，相信通过分析之后，就可以对Fragment的生命周期也有一个很好的认识了</p>
+
+    </div>
+
+    
+    
+    
+      <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center;">
+  <img id="wechat_subscriber_qcode" src="/images/wechat-qcode.png" alt="chenhang wechat" style="width: 200px; max-width: 100%;">
+  <div></div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Fragment/" rel="tag"># Fragment</a>
+              <a href="/tags/事务管理/" rel="tag"># 事务管理</a>
+              <a href="/tags/transaction/" rel="tag"># transaction</a>
+              <a href="/tags/源码分析/" rel="tag"># 源码分析</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2016/10/20/java-proxy/" rel="prev" title="java动态代理">
+      <i class="fa fa-chevron-left"></i> java动态代理
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2016/11/15/fragment/" rel="next" title="Fragment源码分析">
+      Fragment源码分析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#概述"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#分析入口"><span class="nav-text">分析入口</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#代码分析"><span class="nav-text">代码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#FragmentManager"><span class="nav-text">FragmentManager</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FragmentController构造方法"><span class="nav-text">FragmentController构造方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FragmentController-getFragmentManager"><span class="nav-text">FragmentController#getFragmentManager</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FragmentHostCallback"><span class="nav-text">FragmentHostCallback</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FragmentHostCallback-getFragmentManagerImpl"><span class="nav-text">FragmentHostCallback#getFragmentManagerImpl</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FragmentManagerImpl-beginTransaction"><span class="nav-text">FragmentManagerImpl#beginTransaction</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FragmentTransaction-add"><span class="nav-text">FragmentTransaction#add</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FragmentTransaction-commit"><span class="nav-text">FragmentTransaction#commit</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FragmentManagerImpl-enqueueAction"><span class="nav-text">FragmentManagerImpl#enqueueAction</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#BackStackRecord-run"><span class="nav-text">BackStackRecord#run</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="chenhang"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">chenhang</p>
+  <div class="site-description" itemprop="description">博观而约取，厚积而薄发。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">61</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/shensky711" title="GitHub → https://github.com/shensky711" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/shensky711" title="CSDN → https://blog.csdn.net/shensky711" rel="noopener" target="_blank"><i class="fa fa-fw fa-archive"></i>CSDN</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:shensky711@gmail.com" title="E-Mail → mailto:shensky711@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">chenhang</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">284k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">4:18</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'ST1hmgzJfF6c44BNUyK56qad-gzGzoHsz',
+      appKey     : 'Wy4dwHBHU556tTDardpzBI3i',
+      placeholder: "说点什么吧~",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

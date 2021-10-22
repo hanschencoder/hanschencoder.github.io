@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="bMH0URCoOdzdhSMyGeDuGebWiSxHnJsOLundsaPEZbc">
+  <meta name="msvalidate.01" content="EC8F55291A196E9DD39DDDB134E93A69">
+  <meta name="baidu-site-verification" content="QC6bRBu8qm">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.hanschen.site","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="概述在开发过程中，为了实现解耦，我们经常使用依赖注入，常见的依赖注入方式有：  构造方法注入：在构造方法中把依赖作为参数传递进去 setter方法注入：添加setter方法，把依赖传递进去 接口注入：把注入方法抽到一个接口中，然后实现该接口，把依赖传递进去  下面用一个小栗子来说明三种方式的用法： 12345678910111213141516171819202122public class Pe">
+<meta name="keywords" content="依赖注入,Dagger">
+<meta property="og:type" content="article">
+<meta property="og:title" content="依赖注入利器 - Dagger ‡">
+<meta property="og:url" content="http://blog.hanschen.site/2016/12/18/dagger2/index.html">
+<meta property="og:site_name" content="HansChen 的博客">
+<meta property="og:description" content="概述在开发过程中，为了实现解耦，我们经常使用依赖注入，常见的依赖注入方式有：  构造方法注入：在构造方法中把依赖作为参数传递进去 setter方法注入：添加setter方法，把依赖传递进去 接口注入：把注入方法抽到一个接口中，然后实现该接口，把依赖传递进去  下面用一个小栗子来说明三种方式的用法： 12345678910111213141516171819202122public class Pe">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-11-38-41.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-11-41-18.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-11-43-13.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-11-43-43.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-11-44-12.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-11-44-34.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-11-44-58.png">
+<meta property="og:updated_time" content="2021-10-21T01:42:39.219Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="依赖注入利器 - Dagger ‡">
+<meta name="twitter:description" content="概述在开发过程中，为了实现解耦，我们经常使用依赖注入，常见的依赖注入方式有：  构造方法注入：在构造方法中把依赖作为参数传递进去 setter方法注入：添加setter方法，把依赖传递进去 接口注入：把注入方法抽到一个接口中，然后实现该接口，把依赖传递进去  下面用一个小栗子来说明三种方式的用法： 12345678910111213141516171819202122public class Pe">
+<meta name="twitter:image" content="http://image.hanschen.site/master/2019-9-2-11-38-41.png">
+
+<link rel="canonical" href="http://blog.hanschen.site/2016/12/18/dagger2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>依赖注入利器 - Dagger ‡ | HansChen 的博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?cae9425eed9e207f553597421f71ddad";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">HansChen 的博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类<span class="badge">8</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签<span class="badge">61</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">31</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/shensky711" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.hanschen.site/2016/12/18/dagger2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="chenhang">
+      <meta itemprop="description" content="博观而约取，厚积而薄发。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HansChen 的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          依赖注入利器 - Dagger ‡
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2016-12-18 00:00:00" itemprop="dateCreated datePublished" datetime="2016-12-18T00:00:00+08:00">2016-12-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-10-21 09:42:39" itemprop="dateModified" datetime="2021-10-21T09:42:39+08:00">2021-10-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2016/12/18/dagger2/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2016/12/18/dagger2/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>22k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>20 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>在开发过程中，为了实现解耦，我们经常使用依赖注入，常见的依赖注入方式有：</p>
+<ul>
+<li><strong>构造方法注入</strong>：在构造方法中把依赖作为参数传递进去</li>
+<li><strong>setter方法注入</strong>：添加setter方法，把依赖传递进去</li>
+<li><strong>接口注入</strong>：把注入方法抽到一个接口中，然后实现该接口，把依赖传递进去</li>
+</ul>
+<p>下面用一个小栗子来说明三种方式的用法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PersonService</span> <span class="keyword">implements</span> <span class="title">DependencyInjecter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> PersonDao personDao;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 构造方法注入</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">PersonService</span><span class="params">(PersonDao personDao)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.personDao = personDao;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// setter方法注入</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setPersonDao</span><span class="params">(PersonDao personDao)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.personDao = personDao;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 接口注入：实现DependencyInjecter接口</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">injectPersonDao</span><span class="params">(PersonDao personDao)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.personDao = personDao;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ... ... </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+ <a id="more"></a>
+
+<p>我们来看下使用一般的依赖注入方法时，代码会是怎么样的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> PersonService mService;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_main);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 创建PersonService的依赖：personDao</span></span><br><span class="line">        PersonDao personDao = <span class="keyword">new</span> PersonDaoImpl();</span><br><span class="line">        <span class="comment">// 通过构造方法注入依赖</span></span><br><span class="line">        mService = <span class="keyword">new</span> PersonService(personDao);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>看起来还好是吧？但现实情况下，依赖情况往往是比较复杂的，比如很可能我们的依赖关系如下图：<br><img src="http://image.hanschen.site/master/2019-9-2-11-38-41.png" alt="2019-9-2-11-38-41.png"></p>
+<p>PersonDaoImpl依赖类A，类A依赖B，B依赖C和D…在这种情况下，我们就要写出下面这样的代码了：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> PersonService mService;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_main);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 创建依赖D</span></span><br><span class="line">        D d = <span class="keyword">new</span> D();</span><br><span class="line">        <span class="comment">// 创建依赖C</span></span><br><span class="line">        C c = <span class="keyword">new</span> C();</span><br><span class="line">        <span class="comment">// 创建依赖B</span></span><br><span class="line">        B b = <span class="keyword">new</span> B(c, d);</span><br><span class="line">        <span class="comment">// 创建依赖A</span></span><br><span class="line">        A a = <span class="keyword">new</span> A(b);</span><br><span class="line">        <span class="comment">// 创建PersonService的依赖：personDao</span></span><br><span class="line">        PersonDao personDao = <span class="keyword">new</span> PersonDaoImpl(a);</span><br><span class="line">        <span class="comment">// 通过构造方法注入依赖</span></span><br><span class="line">        mService = <span class="keyword">new</span> PersonService(personDao);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>MainActivity只是想使用PersonService而已，却不得不关注PersonService的依赖是什么、PersonDaoImpl依赖的依赖是什么，需要把整个依赖关系搞清楚才能使用PersonService。而且还有一个不好的地方，一旦依赖关系变更了，比如A不再依赖B了，那么就得修改所有创建A的地方。那么，有没有更好的方式呢？Dagger就是为此而生的，让我们看看使用Dagger后，MainActivity会变成什么模样：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    PersonService mService;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_main);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Dagger注入，读者现在可先不关注里面做了什么操作</span></span><br><span class="line">        DaggerPersonServiceComponent.create().inject(MainActivity.<span class="keyword">this</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 注意，mService已经是非空了，可以正常使用</span></span><br><span class="line">        mService.update(<span class="number">1</span>, <span class="string">"HansChen"</span>);</span><br><span class="line">        ......</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>之前创建A、B、C、D、PersonDaoImpl等依赖的代码全不见了，只需要调用一个注入语句就全搞定了。调用了注入语句之后，mService就可以正常使用了，是不是挺方便呢？至于这句注入语句具体干了什么，读者现在可以先不管，后面会有详细说明，这里只是做一个使用演示而已。</p>
+<p>我们大概猜想一下，在MainActivity使用PersonService需要做哪些？</p>
+<ol>
+<li>分析生成依赖关系图，如PersonService–&gt;PersonDaoImpl–&gt;A–&gt;B–&gt;C&amp;D</li>
+<li>根据依赖关系图获取相关依赖，比如依次创建D、C、B、A、PersonDaoImpl、PersonService的实例</li>
+<li>把生成的PersonService实例传递给MainActivity的mService成员变量</li>
+</ol>
+<p>其实Dagger做的也就是上面这些事情了，接下来就让我们真正开始学习Dagger吧</p>
+<h1 id="声明需要注入的对象"><a href="#声明需要注入的对象" class="headerlink" title="声明需要注入的对象"></a>声明需要注入的对象</h1><p>首先我们应该用<code>javax.inject.Inject</code>去注解需要被自动注入的对象，@Inject是Java标准的依赖注入（JSR-330）注解。比如下面栗子中，需要注入的对象就是MainActivity的mService。这里有个要注意的地方，<strong>被@Inject注解的变量不能用private修饰</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 注意，不能被private修饰</span></span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    PersonService mService;</span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="如何实例化出依赖？"><a href="#如何实例化出依赖？" class="headerlink" title="如何实例化出依赖？"></a>如何实例化出依赖？</h1><p>在执行依赖注入的时候，Dagger会查找@Inject注解的成员变量，并尝试获取该类的实例，Dagger最直接的方式就是直接new出相应的对象了。实例化对象的时候，会调用对象的构造方法，但假如有多个构造方法，具体用哪个构造方法来实例化对象？Dagger肯定是不会帮我们“擅自做主”的，用哪个构造方法来实例化对象应该是由我们做主的，所以我们需要<strong>给相应的构造方法添加@Inject注解</strong>。<br>当Dagger需要实例化该对象的时候，会调用@Inject注解的构造方法来实例化对象：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PersonService</span> <span class="keyword">implements</span> <span class="title">DependencyInjecter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> PersonDao personDao;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 用@Inject注解，相当于告诉Dagger需要实例化PersonService的时候，请调用这个构造方法</span></span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">PersonService</span><span class="params">(PersonDao personDao)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.personDao = personDao;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>聪明的你应该发现了，调用PersonService的构造方法需要传入PersonDao实例，所以要实例化PersonService，必须先要实例化PersonDao，Dagger会帮我们自动分析出这个依赖关系，并把它添加到<strong>依赖关系图</strong>里面！Dagger会尝试先去实例化一个PersonDao,如果PersonDao又依赖于另外一个对象A，那么就先尝试去实例化A……以此类推，是不是很像递归？当所有依赖都被实例化出来之后，我们的PersonService当然也被构造出来了。</p>
+<p>问题又来了，如果PersonDao是一个接口呢？Dagger怎么知道这个接口应该怎么实现？答案是不知道的，那么Dagger怎么实例化出一个接口出来？这个就是Module存在的意义之一了。关于Module的讲解我们会在后面详细说明，我们现在只要知道，Module里面会定义一些方法，这些方法会返回我们的依赖，就像：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PersonServiceModule</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 提供PersonDao接口实例</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function">PersonDao <span class="title">providePersonDao</span><span class="params">(A a)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> PersonDaoImpl(a);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Dagger根据需求获取一个实例的时候，并不总是通过new出来的，它会<strong>优先</strong>查找Module<br>中是否有返回相应实例的方法，如果有，就调用Module的方法来获取实例。</p>
+<p>比如你用@Inject注解了一个成员变量，Dagger会查找Module中是否有用@Provides注解的，返回该类实例的方法，有的话就会调用provide方法来获得实例，然后注入，如果没有的话Dagger就会尝试new出一个实例。就像我们现在这个栗子，PersonService依赖于PersonDao接口，Dagger不能直接为我们new出一个接口，但我们可以提供一个Module，在Module中定义一个返回PersonDao接口实例的方法，这样，Dagger就可以解决实例化PersonDao的问题了。</p>
+<p>我们再梳理一下流程，如果我们用@Inject注解了一个成员变量，并调用注入代码之后，Dagger会这样处理：</p>
+<ol>
+<li>查找Module中是否有用@Provides注解的，返回该类实例的方法</li>
+<li>如果有，就调用那个provide方法来获得实例，然后注入</li>
+<li>如果没有，就尝试调用相应的类中被@Inject注解的构造方法new出一个实例，然后注入</li>
+<li>如果没有一个构造方法被@Inject注解，Dagger会因不能满足依赖而出错</li>
+</ol>
+<p>所以假如一个变量被@Inject注解，要么在Module中提供provide方法获取实例，要么该类提供一个被@Inject注解的构造方法，否则Dagger会出错</p>
+<h1 id="Module的使用"><a href="#Module的使用" class="headerlink" title="Module的使用"></a>Module的使用</h1><p>一般而言，Dagger会获取所有依赖的实例，比如当需要一个<code>TestBean</code>的时候，会通过<code>new TestBean()</code>创建实例并注入到类中。但是，以下情况会就不好处理了：</p>
+<ol>
+<li>需要生成的是一个接口，而Dagger不能直接实例化接口</li>
+<li>不能在第三方库的类中添加注解</li>
+<li>可配置的对象必须是配置的</li>
+</ol>
+<p>为了解决以上问题，我们需要定义一个被@Module注解的类，在里面定义用<code>@Provides</code>注解的方法。用该方法返回所需的实例。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PersonServiceModule</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function">D <span class="title">provideD</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> D();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function">C <span class="title">provideC</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> C();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function">B <span class="title">provideB</span><span class="params">(C c, D d)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> B(c, d);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function">A <span class="title">provideA</span><span class="params">(B b)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> A(b);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 提供PersonDao实例</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function">PersonDao <span class="title">providePersonDao</span><span class="params">(A a)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> PersonDaoImpl(a);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>就像<code>providePersonDao</code>返回了PersonDao接口实例，Dagger虽然不能直接实例化出PersonDao接口，但却可以调用Module的providePersonDao方法来获得一个实例。providePersonDao方法需要传入A的实例，那么这里也构成了一个依赖关系图。Dagger会先获取A的实例，然后把实例传递给providePersonDao方法。</p>
+<h1 id="Component的使用"><a href="#Component的使用" class="headerlink" title="Component的使用"></a>Component的使用</h1><p>到目前为止，我们虽然知道了：</p>
+<ul>
+<li>Dagger怎么获取实例：<ul>
+<li>从Module的provide方法中获取</li>
+<li>通过@Inject注解的构造方法new出新的实例</li>
+</ul>
+</li>
+<li>Dagger会推导provide方法和构造方法的参数，形成依赖图，并“满足”我们依赖图的需求，获取依赖的实例</li>
+</ul>
+<p>看样子需要注入的依赖可以获取了，但是不是总觉得还有点“零碎”，整个流程还没连贯起来？比如，Module既然是一个类，生成依赖图的时候，怎么知道跟哪个Module挂钩？即使最后生成了需要的实例，注入的“目的地”是哪里？怎么才能把它注入到“目的地”？残缺的这部分功能，正是Component提供的，Component起到了一个桥梁的作用，贯通Module和注入目标。我们来看看最开始那个例子，我们是怎么进行依赖注入的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    PersonService mService;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_main);</span><br><span class="line"></span><br><span class="line">        PersonServiceComponent component = DaggerPersonServiceComponent.builder()</span><br><span class="line">                                                                       .personServiceModule(<span class="keyword">new</span> PersonServiceModule())</span><br><span class="line">                                                                       .build();</span><br><span class="line">        <span class="comment">// 注入,所有@Inject注解的成员变量都会同时注入</span></span><br><span class="line">        component.inject(MainActivity.<span class="keyword">this</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 通过component获取实例，注意，这里只是演示用法，其实mService在component.inject的时候已经完成了注入</span></span><br><span class="line">        mService = component.getPersonService();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个DaggerPersonServiceComponent是什么鬼？DaggerPersonServiceComponent其实是Dagger为我们<strong>自动生成</strong>的类，它实现了一个Component接口（这个接口是需要我们自己写的），我们来看下它实现的接口长什么样子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 指定PersonServiceModule，当需要获取某实例的时候，会查找PersonServiceModule中是否有返回相应类型的方法，有的话就通过该方法获得实例</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> HansChen</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Component</span>(modules = PersonServiceModule.class)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">PersonServiceComponent</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 查找activity中被<span class="doctag">@Inject</span>注解的成员变量，并尝试获取相应的实例，把实例赋给activity的成员变量</span></span><br><span class="line"><span class="comment">     * 注意函数格式:返回值为空、带有一个参数</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">inject</span><span class="params">(MainActivity activity)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Dagger会尝试从Module中获取PersonService实例，如果Module中不能获取对应实例，则通过PersonService的构造方法new出一个实例</span></span><br><span class="line"><span class="comment">     * 注意函数格式：参数为空，返回值非空</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function">PersonService <span class="title">getPersonService</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个接口被Component注解修饰，它里面可以定义3种类型的方法：</p>
+<ul>
+<li>返回值为空，有一个参数：查找参数中被@Inject注解的成员变量，并尝试获取相应的实例（通过Module的provide方法或@Inject注解的构造方法new出新的实例），把实例赋给参数的成员变量</li>
+<li>返回值非空，参数为空：获取相应实例并返回</li>
+<li>返回值是Component，参数是Moduld，通过该方法可以创建SubComponent实例</li>
+</ul>
+<p>既然获取实例的时候，有可能用到Module，那么就必须为这个Component指定使用的Module是什么。具体做法就是在@Component注解中指定modules。<br>定义好Component之后，Dagger会自动帮我们生成实现类，这就是Dagger强大的地方！生成的类名格式是：Dagger+Component名。<br>Component提供了2种方法，一个是注入式方法，一个是获取实例方法。具体用什么方法，就看个人需求了。<strong>一个Component其实也对应了一个依赖图</strong>，因为Component使用哪个Module是确定不变的，依赖关系无非也就是跟Module和类的定义有关。一旦这些都确定下来了，在这个Component范围内，依赖关系也就被确定下来了。额外再说一点，在Dagger1中，Component的功能是由<code>ObjectGraph</code>实现的，Component是用来代替它的。</p>
+<p>Component定义好之后，build一下工程，Dagger就会自动为我们生成实现类了，就可以使用自动生成的实现类来进行依赖注入了。到现在为止，我们已经通过Dagger完成了依赖注入。可能看起来比正常方法麻烦得多，但是Dagger框架可以让依赖的注入和配置独立于组件之外，它帮助你专注在那些重要的功能类上。通过声明依赖关系和指定规则构建整个应用程序。</p>
+<p>熟悉完Dagger基本的使用之后，接下来我们来讲解一些稍微高级一点的用法：</p>
+<h1 id="Dagger的进阶使用"><a href="#Dagger的进阶使用" class="headerlink" title="Dagger的进阶使用"></a>Dagger的进阶使用</h1><h2 id="Components之间的关系"><a href="#Components之间的关系" class="headerlink" title="Components之间的关系"></a>Components之间的关系</h2><p>在Dagger中，Component之间可以有两种关系:Subcomponents和Component dependencies。他们有什么作用呢？比如在我们应用中，经常会有一些依赖我们在各个界面都使用得到，比如操作数据库、比如网络请求。假设我们有个ServerApi的接口，在页面A、B、C都使用到了，那么我们要在页面A、B、C的Component里面都能获取到ServerApi的实例，但显然，获取ServerApi实例的方法都是一样的，我们不想写重复的代码。于是我们可定义一个ApplicationComponent，在里面返回ServerApi实例，通过Component之间的关系便可以共享ApplicationComponent提供的依赖图。</p>
+<p>下面通过Android中的一个小栗子来说明Subcomponents和Component dependencies如何使用</p>
+<h3 id="dependencies"><a href="#dependencies" class="headerlink" title="dependencies"></a>dependencies</h3><p>先说明下各个模块之间的关系<br>首先，我们定义一个ApplicationComponent，它定义了一个方法，通过它来获得ServerApi实例。ApplicationComponent还关联了ApplicationModule，这个Module是ServerApi实例的提供者，注意，这个Moduld还可以返回Context实例<br><img src="http://image.hanschen.site/master/2019-9-2-11-41-18.png" alt="2019-9-2-11-41-18.png"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span>(modules = ApplicationModule.class)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ApplicationComponent</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function">ServerApi <span class="title">getServerApi</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ApplicationModule</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Context mAppContext;</span><br><span class="line"></span><br><span class="line">    ApplicationModule(Context context) &#123;</span><br><span class="line">        mAppContext = context.getApplicationContext();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function">Context <span class="title">provideAppContext</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> mAppContext;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function">ServerApi <span class="title">provideServerApi</span><span class="params">(Context context)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ServerApiImpl(context);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DemoApplication</span> <span class="keyword">extends</span> <span class="title">Application</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> ApplicationComponent mAppComponent;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate();</span><br><span class="line">        mAppComponent = DaggerApplicationComponent.builder().applicationModule(<span class="keyword">new</span> ApplicationModule(<span class="keyword">this</span>)).build();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> ApplicationComponent <span class="title">getAppComponent</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> mAppComponent;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>MainActivity使用MVP模式，在MainPresenter里面需要传入一个ServerApi对象<br><img src="http://image.hanschen.site/master/2019-9-2-11-43-13.png" alt="2019-9-2-11-43-13.png"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 注意，这里有个dependencies声明</span></span><br><span class="line"><span class="meta">@Component</span>(dependencies = ApplicationComponent.class, modules = MainPresenterModule.class)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">MainPresenterComponent</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function">MainPresenter <span class="title">getMainPresenter</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainPresenterModule</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> MainView mMainView;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MainPresenterModule</span><span class="params">(MainView mainView)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.mMainView = mainView;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function">MainView <span class="title">provideMainView</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> mMainView;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainPresenter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> MainView  mMainView;</span><br><span class="line">    <span class="keyword">private</span> ServerApi mServerApi;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MainPresenter</span><span class="params">(MainView mainView, ServerApi serverApi)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.mMainView = mainView;</span><br><span class="line">        <span class="keyword">this</span>.mServerApi = serverApi;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>先抛开dependencies，我们分析这个这个依赖树是怎么样的<br><img src="http://image.hanschen.site/master/2019-9-2-11-43-43.png" alt="2019-9-2-11-43-43.png"><br>Component中getMainPresenter的目的很简单，就是返回MainPresenter，而MainPresenter又依赖MainView和ServerApi，MainView还好说，在MainPresenterModule中有provide方法，但是ServerApi呢？就像上面说的那样，如果我们在这个Moduld中也添加相应的provide方法，那真是太麻烦了（当然，这样做完全是可以实现的），所以我们依赖了ApplicationComponent，通过dependencies，在被依赖的Component暴露的对象，在子Component中是可见的。这个是什么意思呢？意思有两个：</p>
+<ol>
+<li>被依赖Component接口暴露的对象，可以添加到依赖者的依赖图中</li>
+<li>Component接口没有暴露的对象，依赖者是不可见的</li>
+</ol>
+<p>对于第一点应该比较好理解，就像这个栗子，MainPresenterComponent生成MainPresenter需要ServerApi，而ApplicationComponent中有接口暴露了ServerApi，所以MainPresenterComponent可以获得ServerApi<br>对于第二点，假设MainPresenter还需要传入一个Context对象，我们注意到，ApplicationModule是可以提供Context的，那MainPresenterComponent能不能通过ApplicationComponent获取Context实例？答案是不行的，因为ApplicationComponent没有暴露这个对象。想要获取Context，除非ApplicationComponent中再添加一个getContext的方法。</p>
+<p>他们之间的关系可以用下图描述：<br><img src="http://image.hanschen.site/master/2019-9-2-11-44-12.png" alt="2019-9-2-11-44-12.png"></p>
+<h3 id="Subcomponents"><a href="#Subcomponents" class="headerlink" title="Subcomponents"></a>Subcomponents</h3><p>Subcomponents 实现方法一：</p>
+<ul>
+<li>先定义子 Component，使 用@Subcomponent 标注（不可同时再使用 @Component）</li>
+<li>父 Component 中定义获得子 Component 的方法</li>
+</ul>
+<p>让我们对上面的栗子改造改造：<br>去除MainPresenterComponent的Component注解，改为Subcomponent：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Subcomponent</span>(modules = MainPresenterModule.class)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">MainPresenterComponent</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">inject</span><span class="params">(MainActivity activity)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function">MainPresenter <span class="title">getMainPresenter</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在ApplicationComponent中新增plus方法（名字可随意取），返回值为MainPresenterComponent，参数为MainPresenterModule：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span>(modules = ApplicationModule.class)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ApplicationComponent</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function">MainPresenterComponent <span class="title">plus</span><span class="params">(MainPresenterModule <span class="keyword">module</span>)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样，就构建了一个ApplicationComponent的子图：MainPresenterComponent。子图和dependencies的区别就是，子图可以范围父图所有的依赖，也就是说，子图需要的依赖，不再需要在父Component中暴露任何对象，可以直接通过父图的Moduld提供！他们的关系变为了：<br><img src="http://image.hanschen.site/master/2019-9-2-11-44-34.png" alt="2019-9-2-11-44-34.png"></p>
+<p>这里需要注意的是，以上代码直接在父 Component 返回子 Component 的形式，要求子 Component 依赖的 Module 必须包含一个无参构造函数，用以自动实例化。如果 Module 需要传递参数，则需要使用 <code>@Subcomponent.builder</code> 的方式，实现方法二实现步骤如下：</p>
+<ul>
+<li>在子 Component，定义一个接口或抽象类（通常定义为 Builder），使用 @Subcomponent.Builder 标注<ul>
+<li>编写返回值为 Builder，方法的参数为需要传入参数的 Module</li>
+<li>编写返回值为当前子 Component的 无参方法</li>
+</ul>
+</li>
+<li>父 Component 中定义获得子 Component.Builder 的方法</li>
+</ul>
+<p>代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestModule</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">TestModule</span><span class="params">(String test)</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function">AuthManager <span class="title">provideAuthManager</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> AuthManager.getInstance();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Subcomponent</span>(modules = &#123;TestModule.class&#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">TestComponent</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function">AuthManager <span class="title">getAuthManager</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Subcomponent</span>.Builder</span><br><span class="line">    <span class="class"><span class="keyword">interface</span> <span class="title">Builder</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="function">Builder <span class="title">createBuilder</span><span class="params">(TestModule <span class="keyword">module</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">        <span class="function">TestComponent <span class="title">build</span><span class="params">()</span></span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Singleton</span></span><br><span class="line"><span class="meta">@Component</span>(modules = ApplicationModule.class)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ApplicationComponent</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    TestComponent.<span class="function">Builder <span class="title">testComponentBuilder</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用</span></span><br><span class="line">TestComponent testComponent = mApplicationComponent.testComponentBuilder().createBuilder(<span class="keyword">new</span> TestModule(<span class="string">"test"</span>)).build();</span><br></pre></td></tr></table></figure>
+
+<h2 id="Binds注解"><a href="#Binds注解" class="headerlink" title="Binds注解"></a>Binds注解</h2><p>在Dagger2中，一般都是使用@provide方法注入接口。在Android 中，一般我们会这样做，创建一个接口 Presenter 命名 为 HomePresenter</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">HomePresenter</span> </span>&#123;</span><br><span class="line">   Observable&lt;List&lt;User&gt;&gt; loadUsers()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后创建一个这个接口的实例：HomePresenterImp</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HomePresenterImp</span> <span class="keyword">implements</span> <span class="title">HomePresenter</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">HomePresenterImp</span><span class="params">()</span></span>&#123;</span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> Observable&lt;List&lt;User&gt;&gt; loadUsers()&#123;</span><br><span class="line">        <span class="comment">//Return user list observable</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后在 Module 中，提供实例化的 provide 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HomeModule</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> HomePresenter <span class="title">providesHomePresenter</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> HomePresenterImp();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是，如果我们需要添加一个依赖到 presenter 叫 UserService，那就意味着，我们也要在 module 中添加一个 provide 方法提供这个 UserService，然后在 HomePresenterImp 类中加入一个 UserService 参数的构造方法。<br>有没有觉得这种方法很麻烦呢？我们还可以用 @Binds 注解，如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">HomeModule</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 变为 abstract 方法， 同时 Module 也必须声明为 abstract， 传入的参数必须为返回参数的实现类</span></span><br><span class="line">    <span class="comment">// 当需要 HomePresenter 时，dagger 会自动实例化 HomePresenterImp 并返回</span></span><br><span class="line">    <span class="meta">@Binds</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> HomePresenter <span class="title">bindHomePresenter</span><span class="params">(HomePresenterImp homePresenterImp)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>除了方便，使用 @Binds 注解还可以让 dagger2 生成的代码效率更高。但是需要注意的是，由于 Module 变为抽象类，Module 不能再包含非 static 的带 @Provides 注解的方法。而且这时候，依赖此 Module 的 Component 也不需要传入此 Module 实例了（也实例化不了，因为它是抽象的）。相当于此 Module 仅仅作为描述依赖关系的一个类</p>
+<h2 id="Scopes"><a href="#Scopes" class="headerlink" title="Scopes"></a>Scopes</h2><p>Scopes可是非常的有用，Dagger2可以通过自定义注解限定注解作用域。@Singleton是被Dagger预先定义的作用域注解。</p>
+<ul>
+<li>没有指定作用域的@Provides方法将会在每次注入的时候都创建新的对象</li>
+<li>一个没有scope的component不可以依赖一个有scope的组件component</li>
+<li>子组件和父组件的scope不能相同</li>
+<li>Module中provide方法的scope需要与Component的scope一致</li>
+</ul>
+<p>我们通常的ApplicationComponent都会使用Singleton注解，也就会是说我们如果自定义component必须有自己的scope。读者到这里，可能还不能理解Scopes的作用，我们先来看下默认提供的Singlton到底有什么作用，然后再讨论Scopes的意义：</p>
+<h2 id="Singlton"><a href="#Singlton" class="headerlink" title="Singlton"></a>Singlton</h2><p>Singletons是java提供的一个scope，我们来看看Singletons能做什么事情。<br>为@Provides注释的方法或可注入的类添加添加注解@Singlton，构建的这个对象图表将使用唯一的对象实例，比如我们有个ServerApi<br>方法一：用@Singleton注解类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Singleton</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ServerApi</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ServerApi</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">login</span><span class="params">(String username, String password)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"HansChen"</span>.equals(username) &amp;&amp; <span class="string">"123456"</span>.equals(password);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>方法二：用@Singleton注解Module的provide方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ApplicationModule</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Singleton</span></span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function">ServerApi <span class="title">provideServerApi</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ServerApi();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后我们有个Component：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Singleton</span></span><br><span class="line"><span class="meta">@Component</span>(modules = ApplicationModule.class)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ApplicationComponent</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function">ServerApi <span class="title">getServerApi</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后执行依赖注入：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    ServerApi mService;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_main);</span><br><span class="line"></span><br><span class="line">        ApplicationComponent component = DaggerApplicationComponent.create();</span><br><span class="line">        Log.d(<span class="string">"Hans"</span>, component.getServerApi().toString());</span><br><span class="line">        Log.d(<span class="string">"Hans"</span>, component.getServerApi().toString());</span><br><span class="line">        Log.d(<span class="string">"Hans"</span>, component.getServerApi().toString());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用了以上两种方法的任意一种，我们都会发现，通过component.getServerApi()获得的实例都是同一个实例。不过要注意一点的是，如果类用@Singleton注解了，但Module中又存在一个provide方法是提供该类实例的，但provide方法没有用@Singleton注解，那么Component中获取该实例就不是单例的，因为会优先查找Module的方法。<br>这个单例是相对于同一个Component而言的，不同的Component获取到的实例将会是不一样的。</p>
+<h2 id="自定义Scope"><a href="#自定义Scope" class="headerlink" title="自定义Scope"></a>自定义Scope</h2><p>既然一个没有scope的component不可以依赖一个有scope的组件component，那么我们必然需要自定义scope来去注解自己的Component了，定义方法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Scope</span></span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> FragmentScoped &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>定义出来的FragmentScoped在使用上和Singleton是一样的，那它和Singleton除了是不一样的注解之外，还有什么不一样呢？答案是没有！我们自定义的scope和Singleton并没有任何不一样，不会因为Singleton是java自带的注解就会有什么区别。</p>
+<p>那么，这个scope的设定是为了什么呢？</p>
+<h2 id="scope的作用"><a href="#scope的作用" class="headerlink" title="scope的作用"></a>scope的作用</h2><p>scope除了修饰provide方法可以让我们获得在同一个Component实例范围内的单例之外，主要的作用就是对Component和Moduld的分层管理以及依赖逻辑的可读性。<br>这里借用一个网络上的图片说明：<br><img src="http://image.hanschen.site/master/2019-9-2-11-44-58.png" alt="2019-9-2-11-44-58.png"></p>
+<p>ApplicationComponent一般会用singleton注解，相对的，它的Module中provide方法也只能用singleton注解。UserComponent是用UserSCope能直接使用ApplicationModule吗？不能！因为他俩的scope不一致，这就是这个设定带来的好处，防止不同层级的组件混乱。另外，因为有了scope的存在，各种组件的作用和生命周期也变得可读起来了</p>
+<h2 id="Lazy注入"><a href="#Lazy注入" class="headerlink" title="Lazy注入"></a>Lazy注入</h2><p>有时可能会需要延迟获取一个实例。对任何绑定的 T，可以构建一个 Lazy<t> 来延迟实例化直至第一次调用 Lazy<t> 的 get() 方法。注入之后，第一次get的时会实例化出 T，之后的调用都会获取相同的实例。</t></t></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> <span class="keyword">implements</span> <span class="title">MainView</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 懒加载</span></span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    Lazy&lt;MainPresenter&gt; mPresenter;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_main);</span><br><span class="line"></span><br><span class="line">        MainPresenterComponent component = DaggerMainPresenterComponent.builder()</span><br><span class="line">                                                                       .mainPresenterModule(<span class="keyword">new</span> MainPresenterModule(<span class="keyword">this</span>))</span><br><span class="line">                                                                       .applicationComponent(((DemoApplication) getApplication()).getAppComponent())</span><br><span class="line">                                                                       .build();</span><br><span class="line">        component.inject(<span class="keyword">this</span>);</span><br><span class="line">        Log.d(<span class="string">"Hans"</span>, mPresenter.get().toString()); <span class="comment">// 实例化MainPresenter</span></span><br><span class="line">        Log.d(<span class="string">"Hans"</span>, mPresenter.get().toString()); <span class="comment">// 跟上次获取的实例是同一个实例</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Provider注入"><a href="#Provider注入" class="headerlink" title="Provider注入"></a>Provider注入</h2><p>跟Lazy注入不一样的是，有时候我们希望每次调用get的时候，获取到的实例都是不一样的，这时候可以用Provider注入</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> <span class="keyword">implements</span> <span class="title">MainView</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Provider</span></span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    Provider&lt;MainPresenter&gt; mPresenter;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_main);</span><br><span class="line"></span><br><span class="line">        MainPresenterComponent component = DaggerMainPresenterComponent.builder()</span><br><span class="line">                                                                       .mainPresenterModule(<span class="keyword">new</span> MainPresenterModule(<span class="keyword">this</span>))</span><br><span class="line">                                                                       .applicationComponent(((DemoApplication) getApplication()).getAppComponent())</span><br><span class="line">                                                                       .build();</span><br><span class="line">        component.inject(<span class="keyword">this</span>);</span><br><span class="line">        Log.d(<span class="string">"Hans"</span>, mPresenter.get().toString()); <span class="comment">// 实例化MainPresenter</span></span><br><span class="line">        Log.d(<span class="string">"Hans"</span>, mPresenter.get().toString()); <span class="comment">// 获取新的MainPresenter实例</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Qualifiers注入"><a href="#Qualifiers注入" class="headerlink" title="Qualifiers注入"></a>Qualifiers注入</h2><p>到目前为止，我们的demo里，Moduld的provide返回的对象都是不一样的,但是下面这种情况就不好处理了：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ApplicationModule</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    ......</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 返回ServerApi实例</span></span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function">ServerApi <span class="title">provideServerApiA</span><span class="params">(Context context)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ServerApiImplA(context);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 返回ServerApi实例</span></span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function">ServerApi <span class="title">provideServerApiB</span><span class="params">(Context context)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ServerApiImplB(context);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>provideServerApiA和provideServerApiB返回的都是ServerApi，Dagger是无法判断用哪个provide方法的。这时候就需要添加Qualifiers了：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ApplicationModule</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    ......</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="meta">@Named</span>(<span class="string">"ServerApiImplA"</span>)</span><br><span class="line">    <span class="function">ServerApi <span class="title">provideServerApiA</span><span class="params">(Context context)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ServerApiImplA(context);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="meta">@Named</span>(<span class="string">"ServerApiImplB"</span>)</span><br><span class="line">    <span class="function">ServerApi <span class="title">provideServerApiB</span><span class="params">(Context context)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ServerApiImplB(context);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过这样一个限定，就能区分出2个方法的区别了，当然，在使用过程中，也同样要指明你用哪个name的实例,Dagger会根据你的name来选取对应的provide方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainPresenter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> MainView  mMainView;</span><br><span class="line">    <span class="keyword">private</span> ServerApi mServerApi;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MainPresenter</span><span class="params">(MainView mainView, @Named(<span class="string">"ServerApiImplA"</span>)</span> ServerApi serverApi) </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.mMainView = mainView;</span><br><span class="line">        <span class="keyword">this</span>.mServerApi = serverApi;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>除了用Named注解，你也可以创建你自己的限定注解：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Qualifier</span></span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Retention</span>(RUNTIME)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> YourQualifier &#123;</span><br><span class="line">    <span class="function">String <span class="title">value</span><span class="params">()</span> <span class="keyword">default</span> ""</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="编译时验证"><a href="#编译时验证" class="headerlink" title="编译时验证"></a>编译时验证</h2><p>Dagger 包含了一个注解处理器（annotation processor）来验证模块和注入。这个过程很严格而且会抛出错误，当有非法绑定或绑定不成功时。下面这个例子缺少了 Executor：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DripCoffeeModule</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Provides</span> <span class="function">Heater <span class="title">provideHeater</span><span class="params">(Executor executor)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> CpuHeater(executor);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当编译时，javac 会拒绝绑定缺少的部分:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[ERROR] COMPILATION ERROR :</span><br><span class="line">[ERROR] error: java.util.concurrent.Executor cannot be provided without an @Provides-annotated method.</span><br></pre></td></tr></table></figure>
+
+<p>可以通过给方法 Executor 添加@Provides注解来解决这个问题，或者标记这个模块是不完整的。不完整的模块允许缺少依赖关系</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Module</span>(complete = <span class="keyword">false</span>)</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DripCoffeeModule</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Provides</span> <span class="function">Heater <span class="title">provideHeater</span><span class="params">(Executor executor)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> CpuHeater(executor);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>第一次接触用Dagger框架写的代码时候，如果不了解各种注解作用的时候，那真会有一脸懵逼的感觉，而且单看文章，其实还是很抽象，建议大家用Dagger写个小demo玩玩，很快就上手了，这里提供几个使用Dagger的栗子，希望可以帮助大家上手Dagger</p>
+<ul>
+<li><a href="https://github.com/google/dagger/tree/master/examples" target="_blank" rel="noopener">Dagger demo</a></li>
+<li><a href="https://github.com/googlesamples/android-architecture/tree/todo-mvp-dagger" target="_blank" rel="noopener">谷歌官方 MVP+Dagger2 Demo</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center;">
+  <img id="wechat_subscriber_qcode" src="/images/wechat-qcode.png" alt="chenhang wechat" style="width: 200px; max-width: 100%;">
+  <div></div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/依赖注入/" rel="tag"># 依赖注入</a>
+              <a href="/tags/Dagger/" rel="tag"># Dagger</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2016/12/10/robolectric/" rel="prev" title="Robolectric使用教程">
+      <i class="fa fa-chevron-left"></i> Robolectric使用教程
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2016/12/27/pattern_proxy/" rel="next" title="设计模式之代理模式">
+      设计模式之代理模式 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#概述"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#声明需要注入的对象"><span class="nav-text">声明需要注入的对象</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何实例化出依赖？"><span class="nav-text">如何实例化出依赖？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Module的使用"><span class="nav-text">Module的使用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Component的使用"><span class="nav-text">Component的使用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Dagger的进阶使用"><span class="nav-text">Dagger的进阶使用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Components之间的关系"><span class="nav-text">Components之间的关系</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#dependencies"><span class="nav-text">dependencies</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Subcomponents"><span class="nav-text">Subcomponents</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Binds注解"><span class="nav-text">Binds注解</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Scopes"><span class="nav-text">Scopes</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Singlton"><span class="nav-text">Singlton</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#自定义Scope"><span class="nav-text">自定义Scope</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#scope的作用"><span class="nav-text">scope的作用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lazy注入"><span class="nav-text">Lazy注入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Provider注入"><span class="nav-text">Provider注入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Qualifiers注入"><span class="nav-text">Qualifiers注入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编译时验证"><span class="nav-text">编译时验证</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#小结"><span class="nav-text">小结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="chenhang"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">chenhang</p>
+  <div class="site-description" itemprop="description">博观而约取，厚积而薄发。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">61</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/shensky711" title="GitHub → https://github.com/shensky711" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/shensky711" title="CSDN → https://blog.csdn.net/shensky711" rel="noopener" target="_blank"><i class="fa fa-fw fa-archive"></i>CSDN</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:shensky711@gmail.com" title="E-Mail → mailto:shensky711@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">chenhang</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">284k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">4:18</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'ST1hmgzJfF6c44BNUyK56qad-gzGzoHsz',
+      appKey     : 'Wy4dwHBHU556tTDardpzBI3i',
+      placeholder: "说点什么吧~",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

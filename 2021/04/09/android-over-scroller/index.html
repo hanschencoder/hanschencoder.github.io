@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="bMH0URCoOdzdhSMyGeDuGebWiSxHnJsOLundsaPEZbc">
+  <meta name="msvalidate.01" content="EC8F55291A196E9DD39DDDB134E93A69">
+  <meta name="baidu-site-verification" content="QC6bRBu8qm">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.hanschen.site","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="1. 简介OverScroller 在 Android 系统中承担着为 ListView、RecyclerView、ScrollView 这些滚动控件计算实时滑动位置的任务，这些位置算法直接影响着每一次滚动的体验 众所周知，Android 的动画体验远不如 iOS，即便如今 Android 已普遍支持 120Hz 高刷，体验起来也不是非常舒服。究其原因已经不是硬件性能限制，而是其中很多动画设计本身">
+<meta name="keywords" content="Android,OverScroller">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android 列表滚动优化之 OverScroller 揭秘">
+<meta property="og:url" content="http://blog.hanschen.site/2021/04/09/android-over-scroller/index.html">
+<meta property="og:site_name" content="HansChen 的博客">
+<meta property="og:description" content="1. 简介OverScroller 在 Android 系统中承担着为 ListView、RecyclerView、ScrollView 这些滚动控件计算实时滑动位置的任务，这些位置算法直接影响着每一次滚动的体验 众所周知，Android 的动画体验远不如 iOS，即便如今 Android 已普遍支持 120Hz 高刷，体验起来也不是非常舒服。究其原因已经不是硬件性能限制，而是其中很多动画设计本身">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://image.hanschen.site/master/2021-04-09-16-11-34.gif">
+<meta property="og:image" content="http://image.hanschen.site/master/2021-04-09-16-11-51.gif">
+<meta property="og:image" content="http://image.hanschen.site/master/2021-04-09-16-12-02.gif">
+<meta property="og:image" content="http://image.hanschen.site/master/2021-04-09-17-31-04.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2021-04-09-17-44-46.gif">
+<meta property="og:image" content="http://image.hanschen.site/master/2021-04-09-18-25-11.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2021-04-09-19-21-01.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2021-04-12-10-26-21.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2021-04-12-10-30-53.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2021-04-12-10-45-06.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2021-04-12-11-24-04.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2021-04-12-14-34-02.png">
+<meta property="og:updated_time" content="2021-10-21T01:42:39.219Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android 列表滚动优化之 OverScroller 揭秘">
+<meta name="twitter:description" content="1. 简介OverScroller 在 Android 系统中承担着为 ListView、RecyclerView、ScrollView 这些滚动控件计算实时滑动位置的任务，这些位置算法直接影响着每一次滚动的体验 众所周知，Android 的动画体验远不如 iOS，即便如今 Android 已普遍支持 120Hz 高刷，体验起来也不是非常舒服。究其原因已经不是硬件性能限制，而是其中很多动画设计本身">
+<meta name="twitter:image" content="http://image.hanschen.site/master/2021-04-09-16-11-34.gif">
+
+<link rel="canonical" href="http://blog.hanschen.site/2021/04/09/android-over-scroller/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Android 列表滚动优化之 OverScroller 揭秘 | HansChen 的博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?cae9425eed9e207f553597421f71ddad";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">HansChen 的博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类<span class="badge">8</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签<span class="badge">61</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">31</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/shensky711" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.hanschen.site/2021/04/09/android-over-scroller/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="chenhang">
+      <meta itemprop="description" content="博观而约取，厚积而薄发。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HansChen 的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Android 列表滚动优化之 OverScroller 揭秘
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-04-09 00:00:00" itemprop="dateCreated datePublished" datetime="2021-04-09T00:00:00+08:00">2021-04-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-10-21 09:42:39" itemprop="dateModified" datetime="2021-10-21T09:42:39+08:00">2021-10-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/04/09/android-over-scroller/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/04/09/android-over-scroller/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>17k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>15 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="1-简介"><a href="#1-简介" class="headerlink" title="1. 简介"></a>1. 简介</h1><p><code>OverScroller</code> 在 Android 系统中承担着为 ListView、RecyclerView、ScrollView 这些滚动控件计算实时滑动位置的任务，这些位置算法直接影响着每一次滚动的体验</p>
+<p>众所周知，Android 的动画体验<del>远</del>不如 iOS，即便如今 Android 已普遍支持 120Hz 高刷，体验起来也不是非常舒服。究其原因已经不是硬件性能限制，而是其中很多动画设计本身就有问题。苹果早在很早之前就发布了 <a href="https://developer.apple.com/videos/play/wwdc2018/803" target="_blank" rel="noopener">Designing Fluid Interfaces</a> 致力于打造一个丝滑流畅的用户体验，反观 Android，对于一个日常使用中使用最多的滑动工具类 <code>OverScroller</code> 近几年改进竟然寥寥无几，几乎没有，实在是有点想吐槽</p>
+<p>这个系列分为两篇，第一篇主要讲述 Android 实现滚动的核心工具类 <code>OverScroller</code> 的使用方法和原理，第二篇我们将探索如何进行改进，希望我们每一次探索都能给用户体验带来提升</p>
+<a id="more"></a>
+
+<h1 id="2-使用介绍"><a href="#2-使用介绍" class="headerlink" title="2. 使用介绍"></a>2. 使用介绍</h1><p>在使用之前，先来看看 OverScroller 能做什么：</p>
+<ul>
+<li>startScroll：从指定位置滚动一段指定的距离然后停下，滚动效果与设置的滚动距离、滚动时间、插值器有关，<strong>跟离手速度没有关系</strong>。一般用于控制 View 滚动到<strong>指定</strong>的位置</li>
+<li>fling：从指定位置滑动一段位置然后停下，滚动效果只与<strong>离手速度</strong>以及滑动边界有关，<strong>不能</strong>设置滚动距离、滚动时间和插值器。一般用于触摸抬手后继续让 View 滑动一会</li>
+<li>springBack：从指定位置回弹到指定位置，一般用于实现拖拽后的回弹效果，不能指定回弹时间和插值器</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">startScroll</th>
+<th align="center">fling</th>
+<th align="center">springBack</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><img style="border: none;" src="http://image.hanschen.site/master/2021-04-09-16-11-34.gif"></td>
+<td align="center"><img style="border: none;" src="http://image.hanschen.site/master/2021-04-09-16-11-51.gif"></td>
+<td align="center"><img style="border: none;" src="http://image.hanschen.site/master/2021-04-09-16-12-02.gif"></td>
+</tr>
+</tbody></table>
+<p>在代码中使用也很简单：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1. 启动一个滚动</span></span><br><span class="line">mOverScroller.startScroll(<span class="number">0</span>, <span class="number">1600</span>, <span class="number">0</span>, -<span class="number">1000</span>, <span class="number">1000</span>);</span><br><span class="line"><span class="comment">// 2. 启动定时刷新任务</span></span><br><span class="line">post(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 3. 计算当前最新位置信息</span></span><br><span class="line">        <span class="keyword">if</span> (mOverScroller.computeScrollOffset()) &#123;</span><br><span class="line">            <span class="comment">// 4. 根据最新位置更新 View 状态</span></span><br><span class="line">            Log.d(<span class="string">"OverScroller"</span>, <span class="string">"x="</span> + mOverScroller.getCurrX() + <span class="string">", y="</span> + mOverScroller.getCurrY());</span><br><span class="line">            invalidate();</span><br><span class="line">            <span class="comment">// 5. 判断滚动是否停止，没有停止的话启动下一轮刷新任务</span></span><br><span class="line">            <span class="keyword">if</span> (!mOverScroller.isFinished()) &#123;</span><br><span class="line">                postDelayed(<span class="keyword">this</span>, <span class="number">16</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>上面就是启动一个不断滚动并刷新 View 的最小逻辑（当然更工程化的实践也可以把 Runnable 的逻辑放在 View#computeScroll 里再通过 invalidate 触发）。<code>fling</code> 和 <code>springBack</code> 的启动方式也是一样的，这里就不再进行赘述了。</p>
+<h1 id="3-深入-OverScroller-内部"><a href="#3-深入-OverScroller-内部" class="headerlink" title="3. 深入 OverScroller 内部"></a>3. 深入 OverScroller 内部</h1><p>在上面代码中可知，启动一个滚动任务后，是通过不断地调用 computeScrollOffset 来计算位置的，接下来看下代码实现</p>
+<h2 id="3-1-startScroll"><a href="#3-1-startScroll" class="headerlink" title="3.1 startScroll"></a>3.1 startScroll</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">OverScroller</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">startScroll</span><span class="params">(<span class="keyword">int</span> startX, <span class="keyword">int</span> startY, <span class="keyword">int</span> dx, <span class="keyword">int</span> dy, <span class="keyword">int</span> duration)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 标记当前模式为 SCROLL_MODE</span></span><br><span class="line">        mMode = SCROLL_MODE;</span><br><span class="line">        <span class="comment">// mScrollerX 和 mScrollerY 均是 SplineOverScroller 实例</span></span><br><span class="line">        <span class="comment">// OverScroller 把参数分别传给 mScrollerX 和 mScrollerY，在里面做真正的计算</span></span><br><span class="line">        mScrollerX.startScroll(startX, dx, duration);</span><br><span class="line">        mScrollerY.startScroll(startY, dy, duration);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">SplineOverScroller</span> </span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">startScroll</span><span class="params">(<span class="keyword">int</span> start, <span class="keyword">int</span> distance, <span class="keyword">int</span> duration)</span> </span>&#123;</span><br><span class="line">            mFinished = <span class="keyword">false</span>;</span><br><span class="line">            <span class="comment">// 标记起始点和结束点</span></span><br><span class="line">            mCurrentPosition = mStart = start;</span><br><span class="line">            mFinal = start + distance;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 标记起始时间和动画时长</span></span><br><span class="line">            mStartTime = AnimationUtils.currentAnimationTimeMillis();</span><br><span class="line">            mDuration = duration;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Unused</span></span><br><span class="line">            mDeceleration = <span class="number">0.0f</span>;</span><br><span class="line">            mVelocity = <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>startScroll 的逻辑非常的简单，只是根据参数标记了一下开始位置、结束位置、开始时间、动画时长，还没涉及位置计算（因为位置计算是放在 computeScrollOffset 的呀）</p>
+<p>再看看定时调用的 computeScrollOffset 逻辑：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">OverScroller</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">OverScroller</span><span class="params">(Context context, Interpolator interpolator, <span class="keyword">boolean</span> flywheel)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 初始化插值器</span></span><br><span class="line">        <span class="keyword">if</span> (interpolator == <span class="keyword">null</span>) &#123;</span><br><span class="line">            mInterpolator = <span class="keyword">new</span> Scroller.ViscousFluidInterpolator();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            mInterpolator = interpolator;</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">computeScrollOffset</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (isFinished()) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">switch</span> (mMode) &#123;</span><br><span class="line">            <span class="keyword">case</span> SCROLL_MODE:</span><br><span class="line">                <span class="keyword">long</span> time = AnimationUtils.currentAnimationTimeMillis();</span><br><span class="line">                <span class="comment">// 计算已过去的时间</span></span><br><span class="line">                <span class="keyword">final</span> <span class="keyword">long</span> elapsedTime = time - mScrollerX.mStartTime;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">final</span> <span class="keyword">int</span> duration = mScrollerX.mDuration;</span><br><span class="line">                <span class="keyword">if</span> (elapsedTime &lt; duration) &#123;</span><br><span class="line">                    <span class="comment">// 用插值器对时间比做一个变换</span></span><br><span class="line">                    <span class="keyword">final</span> <span class="keyword">float</span> q = mInterpolator.getInterpolation(elapsedTime / (<span class="keyword">float</span>) duration);</span><br><span class="line">                    mScrollerX.updateScroll(q);</span><br><span class="line">                    mScrollerY.updateScroll(q);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    abortAnimation();</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">SplineOverScroller</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">updateScroll</span><span class="params">(<span class="keyword">float</span> q)</span> </span>&#123;</span><br><span class="line">            <span class="comment">// 根据比值计算最新位置</span></span><br><span class="line">            mCurrentPosition = mStart + Math.round(q * (mFinal - mStart));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>逻辑也是很简单，实在没太多可说的……就是把插值器曲线映射到位移曲线，时长如果不指定的话，默认是 250ms，插值器需要通过构造方法传入，如果不指定的话，系统默认会指定一个 <code>ViscousFluidInterpolator</code>，下面是这个插值器的曲线，可以看到是一个先缓后快再缓的动画</p>
+<p><img src="http://image.hanschen.site/master/2021-04-09-17-31-04.png" alt="ViscousFluidInterpolator"></p>
+<h2 id="3-2-fling-amp-springBack"><a href="#3-2-fling-amp-springBack" class="headerlink" title="3.2 fling &amp; springBack"></a>3.2 fling &amp; springBack</h2><p><code>fling</code> 和 <code>springBack</code> 为什么要一起说呢？因为 <code>fling</code> 的动画比较复杂，<code>springBack</code> 算是属于 <code>fling</code> 的其中一个子状态，考虑以下这个情况：</p>
+<table>
+    <tr>
+        <td><img style="border: none;" src="http://image.hanschen.site/master/2021-04-09-17-44-46.gif" width="300"></td>
+        <td><img style="border: none;" src="http://image.hanschen.site/master/2021-04-09-18-25-11.png" width="300"></td>
+    </tr>
+</table>
+
+<p>我们看到当以比较大的速度执行 fling 的时候，是很容易碰到边界的，fling 会根据预设的边界值执行越界并回弹，可以把整个动画过程分解成三个阶段：</p>
+<ul>
+<li>SPLINE：也就是正常滑动阶段</li>
+<li>BALLISTIC：越界减速阶段</li>
+<li>CUBIC：回弹阶段</li>
+</ul>
+<p><code>springBack</code> 后执行的动画，其实就是 <code>fling</code> 的 <code>CUBIC</code> 阶段，所以干脆就放在一起说了</p>
+<p>这个命名其实也挺有意思，这三个分别是样条曲线、弹道曲线、三次曲线，从命名上大致也可以推断出，三个阶段采用的「时间-位置」曲线是不一样的。</p>
+<p>当然了，Android 很多控件在  fling 的时候，都把越界回弹效果取消掉，取而代之的是显示一个 <code>EdgeEffect</code>。也就是说执行完 SPLINE 阶段动画后，是看不到 <code>BALLISTIC</code> 和 <code>CUBIC</code> 的，只能看到一个边缘辉光效果，列表到达顶/底部的时候，往往一下子停在那里了~</p>
+<h3 id="3-2-1-SPLINE"><a href="#3-2-1-SPLINE" class="headerlink" title="3.2.1 SPLINE"></a>3.2.1 SPLINE</h3><p>先来看看启动 fling 的入口函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">OverScroller</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">fling</span><span class="params">(<span class="keyword">int</span> startX, <span class="keyword">int</span> startY, <span class="keyword">int</span> velocityX, <span class="keyword">int</span> velocityY,</span></span></span><br><span class="line"><span class="function"><span class="params">            <span class="keyword">int</span> minX, <span class="keyword">int</span> maxX, <span class="keyword">int</span> minY, <span class="keyword">int</span> maxY, <span class="keyword">int</span> overX, <span class="keyword">int</span> overY)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 标记滚动模式，主要和 startScroll 进行区分</span></span><br><span class="line">        mMode = FLING_MODE;</span><br><span class="line">        mScrollerX.fling(startX, velocityX, minX, maxX, overX);</span><br><span class="line">        mScrollerY.fling(startY, velocityY, minY, maxY, overY);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">SplineOverScroller</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">fling</span><span class="params">(<span class="keyword">int</span> start, <span class="keyword">int</span> velocity, <span class="keyword">int</span> min, <span class="keyword">int</span> max, <span class="keyword">int</span> over)</span> </span>&#123;</span><br><span class="line">            mOver = over;</span><br><span class="line">            mFinished = <span class="keyword">false</span>;</span><br><span class="line">            mCurrVelocity = mVelocity = velocity;</span><br><span class="line">            mDuration = mSplineDuration = <span class="number">0</span>;</span><br><span class="line">            mStartTime = AnimationUtils.currentAnimationTimeMillis();</span><br><span class="line">            mCurrentPosition = mStart = start;</span><br><span class="line"></span><br><span class="line">            mState = SPLINE;</span><br><span class="line">            <span class="keyword">double</span> totalDistance = <span class="number">0.0</span>;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (velocity != <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="comment">// 根据速度计算滑动时长</span></span><br><span class="line">                mDuration = mSplineDuration = getSplineFlingDuration(velocity);</span><br><span class="line">                <span class="comment">// 根据速度计算滑动距离</span></span><br><span class="line">                totalDistance = getSplineFlingDistance(velocity);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            mSplineDistance = (<span class="keyword">int</span>) (totalDistance * Math.signum(velocity));</span><br><span class="line">            mFinal = start + mSplineDistance;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (mFinal &lt; min) &#123;</span><br><span class="line">                <span class="comment">// 如果计算出的滑动距离超过 min 边界，则重新计算到达 min 边界时的滑动时长</span></span><br><span class="line">                adjustDuration(mStart, mFinal, min);</span><br><span class="line">                mFinal = min;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (mFinal &gt; max) &#123;</span><br><span class="line">                <span class="comment">// 如果计算出的滑动距离超过 max 边界，则重新计算到达 max 边界时的滑动时长</span></span><br><span class="line">                adjustDuration(mStart, mFinal, max);</span><br><span class="line">                mFinal = max;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">private</span> <span class="keyword">double</span> <span class="title">getSplineDeceleration</span><span class="params">(<span class="keyword">int</span> velocity)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> Math.log(INFLEXION * Math.abs(velocity) / (mFlingFriction * mPhysicalCoeff));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * 计算滑动距离</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="function"><span class="keyword">private</span> <span class="keyword">double</span> <span class="title">getSplineFlingDistance</span><span class="params">(<span class="keyword">int</span> velocity)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">final</span> <span class="keyword">double</span> l = getSplineDeceleration(velocity);</span><br><span class="line">            <span class="keyword">final</span> <span class="keyword">double</span> decelMinusOne = DECELERATION_RATE - <span class="number">1.0</span>;</span><br><span class="line">            <span class="keyword">return</span> mFlingFriction * mPhysicalCoeff * Math.exp(DECELERATION_RATE / decelMinusOne * l);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * 计算滑动时长</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">getSplineFlingDuration</span><span class="params">(<span class="keyword">int</span> velocity)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">final</span> <span class="keyword">double</span> l = getSplineDeceleration(velocity);</span><br><span class="line">            <span class="keyword">final</span> <span class="keyword">double</span> decelMinusOne = DECELERATION_RATE - <span class="number">1.0</span>;</span><br><span class="line">            <span class="keyword">return</span> (<span class="keyword">int</span>) (<span class="number">1000.0</span> * Math.exp(l / decelMinusOne));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<img style="border: none;" src="http://image.hanschen.site/master/2021-04-09-19-21-01.png">
+
+
+<p>看代码前先来看看上面的图，图中说明了 start、min、max、over 等位置的意义，这里简要说明一下</p>
+<ul>
+<li>fling 后最终停下来的位置必须在 min 和 max 区间之间</li>
+<li>BALLISTIC 越界阶段，不能超过 over 的位置，即 over 是最大越界距离</li>
+<li>start 可以位于 [min, max] 区间之外，如果处于区间之外，会根据速度方向和大小做一个决策，会有以下三种情况：<ul>
+<li>速度指向边界外：先执行 BALLISTIC 越界再执行 CUBIC 回弹回到边界</li>
+<li>速度指向边界内：如果速度足以越过边界，则按照正常流程执行，先执行 SPLINE</li>
+<li>速度指向边界内：如果速度不足以越过边界，直接执行 CUBIC 回到边界</li>
+</ul>
+</li>
+</ul>
+<p>fling 函数主要功能：</p>
+<ul>
+<li>根据起始速度计算滑动的时长和距离</li>
+<li>如果计算出最终点处于 [min, max] 区间之外，则重新计算到达边界的时长</li>
+<li>标记当前状态为 SPLINE 状态</li>
+</ul>
+<p>滑动距离和时长的计算公式中，可以把 mPhysicalCoeff 也看做常数，把<strong>时长-速度公式</strong>和图像列出来：</p>
+<p>$$<br>y=1000\cdot \exp \left( \frac{\ln \left( \frac{0.35x}{2140.47} \right)}{1.358} \right)<br>$$</p>
+<p><img src="http://image.hanschen.site/master/2021-04-12-10-26-21.png" alt="2021-04-12-10-26-21"></p>
+<p>再看看<strong>距离-速度公式</strong>：</p>
+<p>$$<br>y=2140.47\cdot \exp \left( 1.74\cdot \ln \left( \frac{0.35\cdot x}{2140.47} \right) \right)<br>$$<br><img src="http://image.hanschen.site/master/2021-04-12-10-30-53.png" alt="2021-04-12-10-30-53"></p>
+<p>可以看到距离和时长都是随着速度增大而增大的，只不过时长的增长速度在后期会有一定的收敛，保证动画时长不至于太长</p>
+<p>还有一点要注意的是，$ \frac{Distance} {Duration} $ 的比值是一个线性函数，也就是初速度越大，平均速度越大，两者是线性增长的：</p>
+<p>$$<br>y=\frac{2140.47\cdot \exp \left( 1.74\cdot \ln \left( \frac{0.35\cdot x}{2140.47} \right) \right)}{1000\cdot \exp \left( \frac{\ln \left( \frac{0.35x}{2140.47} \right)}{1.358} \right)}<br>$$</p>
+<p><img src="http://image.hanschen.site/master/2021-04-12-10-45-06.png" alt="2021-04-12-10-45-06"></p>
+<p>但是说实话，目前我暂时没想明白这两个公式的物理意义，有明白的大佬求告知~ 难道是利用了对数函数收敛的特性确定了时长公式，然后设定平均速度线性增长后，推导出距离公式？</p>
+<p>目前只确定了滑动总距离和时长，那么中间过程是怎么更新位置的呢：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">OverScroller</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">computeScrollOffset</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (isFinished()) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">switch</span> (mMode) &#123;</span><br><span class="line">            <span class="keyword">case</span> FLING_MODE:</span><br><span class="line">                ...</span><br><span class="line">                <span class="keyword">if</span> (!mScrollerY.mFinished) &#123;</span><br><span class="line">                    <span class="comment">// 更新当前阶段的速度和位置</span></span><br><span class="line">                    <span class="keyword">if</span> (!mScrollerY.update()) &#123;</span><br><span class="line">                        <span class="comment">// 判断是否需要进入下一动画阶段</span></span><br><span class="line">                        <span class="keyword">if</span> (!mScrollerY.continueWhenFinished()) &#123;</span><br><span class="line">                            mScrollerY.finish();</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">SplineOverScroller</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">boolean</span> <span class="title">update</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">final</span> <span class="keyword">long</span> time = AnimationUtils.currentAnimationTimeMillis();</span><br><span class="line">            <span class="keyword">final</span> <span class="keyword">long</span> currentTime = time - mStartTime;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (currentTime == <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="keyword">return</span> mDuration &gt; <span class="number">0</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// 根据动画时长判断当前阶段的动画是否应该结束</span></span><br><span class="line">            <span class="keyword">if</span> (currentTime &gt; mDuration) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">double</span> distance = <span class="number">0.0</span>;</span><br><span class="line">            <span class="keyword">switch</span> (mState) &#123;</span><br><span class="line">                <span class="keyword">case</span> SPLINE: &#123;</span><br><span class="line">                    <span class="comment">// 把当前时间映射到 100 个采样点的曲线之中</span></span><br><span class="line">                    <span class="keyword">final</span> <span class="keyword">float</span> t = (<span class="keyword">float</span>) currentTime / mSplineDuration;</span><br><span class="line">                    <span class="keyword">final</span> <span class="keyword">int</span> index = (<span class="keyword">int</span>) (NB_SAMPLES * t);</span><br><span class="line">                    <span class="keyword">float</span> distanceCoef = <span class="number">1</span>.f;</span><br><span class="line">                    <span class="keyword">float</span> velocityCoef = <span class="number">0</span>.f;</span><br><span class="line">                    <span class="keyword">if</span> (index &lt; NB_SAMPLES) &#123;</span><br><span class="line">                        <span class="keyword">final</span> <span class="keyword">float</span> t_inf = (<span class="keyword">float</span>) index / NB_SAMPLES;</span><br><span class="line">                        <span class="keyword">final</span> <span class="keyword">float</span> t_sup = (<span class="keyword">float</span>) (index + <span class="number">1</span>) / NB_SAMPLES;</span><br><span class="line">                        <span class="keyword">final</span> <span class="keyword">float</span> d_inf = SPLINE_POSITION[index];</span><br><span class="line">                        <span class="keyword">final</span> <span class="keyword">float</span> d_sup = SPLINE_POSITION[index + <span class="number">1</span>];</span><br><span class="line">                        <span class="comment">// 根据映射时间计算样条曲线的当前的斜率，即速度</span></span><br><span class="line">                        velocityCoef = (d_sup - d_inf) / (t_sup - t_inf);</span><br><span class="line">                        <span class="comment">// 根据映射时间计算样条曲线的高度，即距离</span></span><br><span class="line">                        distanceCoef = d_inf + (t - t_inf) * velocityCoef;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="comment">// 把样条距离映射回真正的距离</span></span><br><span class="line">                    distance = distanceCoef * mSplineDistance;</span><br><span class="line">                    <span class="comment">// 把样条速递易映射回真正的速度</span></span><br><span class="line">                    mCurrVelocity = velocityCoef * mSplineDistance / mSplineDuration * <span class="number">1000.0f</span>;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">case</span> BALLISTIC: &#123;</span><br><span class="line">                    <span class="comment">// 根据匀减速运动公式计算位置和速度</span></span><br><span class="line">                    <span class="keyword">final</span> <span class="keyword">float</span> t = currentTime / <span class="number">1000.0f</span>;</span><br><span class="line">                    mCurrVelocity = mVelocity + mDeceleration * t;</span><br><span class="line">                    distance = mVelocity * t + mDeceleration * t * t / <span class="number">2.0f</span>;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">case</span> CUBIC: &#123;</span><br><span class="line">                    <span class="comment">// 根据一个自定义的三次曲线计算位置和速度</span></span><br><span class="line">                    <span class="keyword">final</span> <span class="keyword">float</span> t = (<span class="keyword">float</span>) (currentTime) / mDuration;</span><br><span class="line">                    <span class="keyword">final</span> <span class="keyword">float</span> t2 = t * t;</span><br><span class="line">                    <span class="keyword">final</span> <span class="keyword">float</span> sign = Math.signum(mVelocity);</span><br><span class="line">                    distance = sign * mOver * (<span class="number">3.0f</span> * t2 - <span class="number">2.0f</span> * t * t2);</span><br><span class="line">                    mCurrVelocity = sign * mOver * <span class="number">6.0f</span> * (- t + t2);</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            mCurrentPosition = mStart + (<span class="keyword">int</span>) Math.round(distance);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">boolean</span> <span class="title">continueWhenFinished</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">switch</span> (mState) &#123;</span><br><span class="line">                <span class="keyword">case</span> SPLINE:</span><br><span class="line">                    <span class="keyword">if</span> (mDuration &lt; mSplineDuration) &#123;</span><br><span class="line">                        <span class="comment">// 如果时长小于 mSplineDuration ，说明 mDuration 被重新计算过，即上面说到的到达边界的时间。那么我们需要进入越界状态</span></span><br><span class="line">                        mCurrentPosition = mStart = mFinal;</span><br><span class="line">                        mVelocity = (<span class="keyword">int</span>) mCurrVelocity;</span><br><span class="line">                        mDeceleration = getDeceleration(mVelocity);</span><br><span class="line">                        mStartTime += mDuration;</span><br><span class="line">                        onEdgeReached();</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        <span class="comment">// SPLINE 停止时未到达边界，结束动画</span></span><br><span class="line">                        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="keyword">case</span> BALLISTIC:</span><br><span class="line">                    <span class="comment">// 越界状态结束，进入回弹阶段</span></span><br><span class="line">                    mStartTime += mDuration;</span><br><span class="line">                    startSpringback(mFinal, mStart, <span class="number">0</span>);</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="keyword">case</span> CUBIC:</span><br><span class="line">                    <span class="comment">// 回弹阶段结束，结束动画</span></span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            update();</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>SPLINE</code> 阶段的位置和速度完全是由预设的 <code>SPLINE_POSITION</code> 样条曲线决定的，它是一个大小为 101 的数组，里面存储了一条曲线平均采样 100 次的坐标值，初始化如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> NB_SAMPLES = <span class="number">100</span>;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">float</span>[] SPLINE_POSITION = <span class="keyword">new</span> <span class="keyword">float</span>[NB_SAMPLES + <span class="number">1</span>];</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">float</span>[] SPLINE_TIME = <span class="keyword">new</span> <span class="keyword">float</span>[NB_SAMPLES + <span class="number">1</span>];</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> &#123;</span><br><span class="line">    <span class="keyword">float</span> x_min = <span class="number">0.0f</span>;</span><br><span class="line">    <span class="keyword">float</span> y_min = <span class="number">0.0f</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; NB_SAMPLES; i++) &#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">float</span> alpha = (<span class="keyword">float</span>) i / NB_SAMPLES;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">float</span> x_max = <span class="number">1.0f</span>;</span><br><span class="line">        <span class="keyword">float</span> x, tx, coef;</span><br><span class="line">        <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">            x = x_min + (x_max - x_min) / <span class="number">2.0f</span>;</span><br><span class="line">            coef = <span class="number">3.0f</span> * x * (<span class="number">1.0f</span> - x);</span><br><span class="line">            tx = coef * ((<span class="number">1.0f</span> - x) * P1 + x * P2) + x * x * x;</span><br><span class="line">            <span class="keyword">if</span> (Math.abs(tx - alpha) &lt; <span class="number">1E-5</span>) <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">if</span> (tx &gt; alpha) x_max = x;</span><br><span class="line">            <span class="keyword">else</span> x_min = x;</span><br><span class="line">        &#125;</span><br><span class="line">        SPLINE_POSITION[i] = coef * ((<span class="number">1.0f</span> - x) * START_TENSION + x) + x * x * x;</span><br><span class="line">    &#125;</span><br><span class="line">    SPLINE_POSITION[NB_SAMPLES] = SPLINE_TIME[NB_SAMPLES] = <span class="number">1.0f</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>看代码很难想象它长什么样，直接看看它的图像吧：</p>
+<p><img src="http://image.hanschen.site/master/2021-04-12-11-24-04.png" alt="2021-04-12-11-24-04"></p>
+<p>也就是说，SPLINE 和 startScroll 很像，位置曲线都是由一根预置的曲线决定的，把预置曲线映射真实的距离，只是 SPLINE 没有使用插值器曲线，而是使用了一根缓停的样条曲线</p>
+<h3 id="3-2-2-BALLISTIC"><a href="#3-2-2-BALLISTIC" class="headerlink" title="3.2.2 BALLISTIC"></a>3.2.2 BALLISTIC</h3><p>SPLINE 阶段结束后，会通过 continueWhenFinished 进入下一阶段：越界阶段（前提是此时已经到达边界）。越界阶段的原理相对简单，就是一段匀减速运动（直至速度降为 0），默认加速度 a 为 -2000.0f，到达边界进入 BALLISTIC 阶段的初始化逻辑在 <code>onEdgeReached</code> 中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">onEdgeReached</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">float</span> velocitySquared = (<span class="keyword">float</span>) mVelocity * mVelocity;</span><br><span class="line">    <span class="comment">// 计算速度降为 0 时，运动的距离</span></span><br><span class="line">    <span class="keyword">float</span> distance = velocitySquared / (<span class="number">2.0f</span> * Math.abs(mDeceleration));</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">float</span> sign = Math.signum(mVelocity);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (distance &gt; mOver) &#123;</span><br><span class="line">            <span class="comment">// 如果距离大于最大距离 over，则重新计算加速度，使运动距离恰好为 over</span></span><br><span class="line">            mDeceleration = - sign * velocitySquared / (<span class="number">2.0f</span> * mOver);</span><br><span class="line">            distance = mOver;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    mOver = (<span class="keyword">int</span>) distance;</span><br><span class="line">    <span class="comment">// 标记动画阶段</span></span><br><span class="line">    mState = BALLISTIC;</span><br><span class="line">    mFinal = mStart + (<span class="keyword">int</span>) (mVelocity &gt; <span class="number">0</span> ? distance : -distance);</span><br><span class="line">    <span class="comment">// 根据初速度和加速度计算总时长</span></span><br><span class="line">    mDuration = - (<span class="keyword">int</span>) (<span class="number">1000.0f</span> * mVelocity / mDeceleration);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>速度：<br>$$<br>v_t=v_0+at<br>$$</p>
+<p>距离：<br>$$<br>s_t=v_0t + \frac{at^2} {2}<br>$$</p>
+<p>这里有个小吐槽，加速度固定是 2000，这也太小了吧，也就是说，如果越界速度为 10000， 那么需要 5s 之后，速度才能降为 0，一个 5s 的动画童鞋们估计都知道意味着多久吧？</p>
+<h3 id="3-2-3-CUBIC"><a href="#3-2-3-CUBIC" class="headerlink" title="3.2.3 CUBIC"></a>3.2.3 CUBIC</h3><p>上一节内容知道，BALLISTIC 阶段结束时，速度已经降低为 0，我们终于来到最后一段， 从 continueWhenFinished 里会调用 <code>startSpringback</code> 作为 CUBIC 的初始化：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">startSpringback</span><span class="params">(<span class="keyword">int</span> start, <span class="keyword">int</span> end, <span class="keyword">int</span> velocity)</span> </span>&#123;</span><br><span class="line">    mFinished = <span class="keyword">false</span>;</span><br><span class="line">    <span class="comment">// 标记动画阶段</span></span><br><span class="line">    mState = CUBIC;</span><br><span class="line">    mCurrentPosition = mStart = start;</span><br><span class="line">    mFinal = end;</span><br><span class="line">    <span class="comment">// CUBIC 阶段运动总距离</span></span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">int</span> delta = start - end;</span><br><span class="line">    mDeceleration = getDeceleration(delta);</span><br><span class="line">    mVelocity = -delta; <span class="comment">// only sign is used</span></span><br><span class="line">    mOver = Math.abs(delta);</span><br><span class="line">    <span class="comment">// 计算此阶段的动画时长</span></span><br><span class="line">    mDuration = (<span class="keyword">int</span>) (<span class="number">1000.0</span> * Math.sqrt(-<span class="number">2.0</span> * delta / mDeceleration));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>时长计算依然使用匀加速直线运动的逻辑，想象一段初速度为 0，加速度为 a， 距离为 delta 的情况：</p>
+<p>$$<br>delta=\frac{(v_0 + v_t)} {2} t<br>$$</p>
+<p>则：<br>$ v_0=0，v_t=at $，那么 $ delta=\frac{at^2} {2} $，$ t=\sqrt{ \frac{2*delta} {a}}$</p>
+<p>在 <code>update</code> 方法中，更新 CUBIC 的核心逻辑是：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> CUBIC: &#123;</span><br><span class="line">    <span class="comment">// 根据一个自定义的三次曲线计算位置和速度</span></span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">float</span> t = (<span class="keyword">float</span>) (currentTime) / mDuration;</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">float</span> t2 = t * t;</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">float</span> sign = Math.signum(mVelocity);</span><br><span class="line">    <span class="comment">// 计算运动位置</span></span><br><span class="line">    distance = sign * mOver * (<span class="number">3.0f</span> * t2 - <span class="number">2.0f</span> * t * t2);</span><br><span class="line">    <span class="comment">// 计算速度，对距离公式求导即可</span></span><br><span class="line">    mCurrVelocity = sign * mOver * <span class="number">6.0f</span> * (- t + t2);</span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>核心逻辑是这个 <code>3.0f * t2 - 2.0f * t * t2</code>, 这其实是一个比较常用的三次曲线：</p>
+<p><img src="http://image.hanschen.site/master/2021-04-12-14-34-02.png" alt="2021-04-12-14-34-02"></p>
+<p>在 [0, 1] 区间内，是一个缓入缓出的曲线。至此，CUBIC 的运动规律也摸清楚了，在固定时间内，把时间映射到 [0, 1] 的区间，再把 y 坐标映射实际的位置</p>
+<h1 id="4-小结"><a href="#4-小结" class="headerlink" title="4. 小结"></a>4. 小结</h1><p>目前为止，我们终于把 <code>startScroll</code> 和 <code>fling</code> 各阶段的曲线看了一遍，至于 <code>springBack</code> 和其他一些情况都大同小异，就不细述了。</p>
+<p>很多时候 OverScroller 都是只是使用的固定的曲线映射真正的曲线，比如 <code>startScroll</code>、<code>SPLINE</code> 和 <code>CUBIC</code>，那如果想改变效果的话，是不是修改一下曲线形态就可以了呢？但一条曲线是否真的能在不同速度下都有比较好的表现吗？或许我们还要有很多的实践和尝试才能做出一段让用户舒服滑动，而这些探索和尝试，将放在下一篇文章中详细讨论~</p>
+
+    </div>
+
+    
+    
+    
+      <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center;">
+  <img id="wechat_subscriber_qcode" src="/images/wechat-qcode.png" alt="chenhang wechat" style="width: 200px; max-width: 100%;">
+  <div></div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Android/" rel="tag"># Android</a>
+              <a href="/tags/OverScroller/" rel="tag"># OverScroller</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/11/20/ninja_compile/" rel="prev" title="使用 Ninja 提升模块编译速度">
+      <i class="fa fa-chevron-left"></i> 使用 Ninja 提升模块编译速度
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/10/21/android-12-letterbox/" rel="next" title="Android 12 Letterbox Mode">
+      Android 12 Letterbox Mode <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-简介"><span class="nav-text">1. 简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-使用介绍"><span class="nav-text">2. 使用介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-深入-OverScroller-内部"><span class="nav-text">3. 深入 OverScroller 内部</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-startScroll"><span class="nav-text">3.1 startScroll</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-fling-amp-springBack"><span class="nav-text">3.2 fling &amp; springBack</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-1-SPLINE"><span class="nav-text">3.2.1 SPLINE</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-2-BALLISTIC"><span class="nav-text">3.2.2 BALLISTIC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-3-CUBIC"><span class="nav-text">3.2.3 CUBIC</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-小结"><span class="nav-text">4. 小结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="chenhang"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">chenhang</p>
+  <div class="site-description" itemprop="description">博观而约取，厚积而薄发。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">61</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/shensky711" title="GitHub → https://github.com/shensky711" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/shensky711" title="CSDN → https://blog.csdn.net/shensky711" rel="noopener" target="_blank"><i class="fa fa-fw fa-archive"></i>CSDN</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:shensky711@gmail.com" title="E-Mail → mailto:shensky711@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">chenhang</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">284k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">4:18</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+          load: ['[tex]/mhchem'],
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+          packages: {'[+]': ['mhchem']},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'ST1hmgzJfF6c44BNUyK56qad-gzGzoHsz',
+      appKey     : 'Wy4dwHBHU556tTDardpzBI3i',
+      placeholder: "说点什么吧~",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

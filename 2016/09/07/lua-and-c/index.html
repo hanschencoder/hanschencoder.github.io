@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="bMH0URCoOdzdhSMyGeDuGebWiSxHnJsOLundsaPEZbc">
+  <meta name="msvalidate.01" content="EC8F55291A196E9DD39DDDB134E93A69">
+  <meta name="baidu-site-verification" content="QC6bRBu8qm">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.hanschen.site","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Lua栈要理解Lua和C++交互，首先要理解Lua堆栈。简单来说，Lua和C/C++语言通信的主要方法是一个无处不在的虚拟栈。栈的特点是先进后出 在Lua中，Lua堆栈就是一个struct，堆栈索引的方式可是是正数也可以是负数，区别是：正数索引1永远表示栈底，负数索引-1永远表示栈顶,如图： 入栈的数据类型包括数值, 字符串, 指针, talbe, 闭包等, 下面是一个栈的例子:">
+<meta name="keywords" content="lua,lua和c交互,lua和c">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Lua和C交互的简易教程">
+<meta property="og:url" content="http://blog.hanschen.site/2016/09/07/lua-and-c/index.html">
+<meta property="og:site_name" content="HansChen 的博客">
+<meta property="og:description" content="Lua栈要理解Lua和C++交互，首先要理解Lua堆栈。简单来说，Lua和C/C++语言通信的主要方法是一个无处不在的虚拟栈。栈的特点是先进后出 在Lua中，Lua堆栈就是一个struct，堆栈索引的方式可是是正数也可以是负数，区别是：正数索引1永远表示栈底，负数索引-1永远表示栈顶,如图： 入栈的数据类型包括数值, 字符串, 指针, talbe, 闭包等, 下面是一个栈的例子:">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-10-56-15.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-10-56-27.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-10-56-39.png">
+<meta property="og:updated_time" content="2021-10-21T01:42:39.219Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Lua和C交互的简易教程">
+<meta name="twitter:description" content="Lua栈要理解Lua和C++交互，首先要理解Lua堆栈。简单来说，Lua和C/C++语言通信的主要方法是一个无处不在的虚拟栈。栈的特点是先进后出 在Lua中，Lua堆栈就是一个struct，堆栈索引的方式可是是正数也可以是负数，区别是：正数索引1永远表示栈底，负数索引-1永远表示栈顶,如图： 入栈的数据类型包括数值, 字符串, 指针, talbe, 闭包等, 下面是一个栈的例子:">
+<meta name="twitter:image" content="http://image.hanschen.site/master/2019-9-2-10-56-15.png">
+
+<link rel="canonical" href="http://blog.hanschen.site/2016/09/07/lua-and-c/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Lua和C交互的简易教程 | HansChen 的博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?cae9425eed9e207f553597421f71ddad";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">HansChen 的博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类<span class="badge">8</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签<span class="badge">61</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">31</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/shensky711" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.hanschen.site/2016/09/07/lua-and-c/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="chenhang">
+      <meta itemprop="description" content="博观而约取，厚积而薄发。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HansChen 的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Lua和C交互的简易教程
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2016-09-07 00:00:00" itemprop="dateCreated datePublished" datetime="2016-09-07T00:00:00+08:00">2016-09-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-10-21 09:42:39" itemprop="dateModified" datetime="2021-10-21T09:42:39+08:00">2021-10-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Lua/" itemprop="url" rel="index"><span itemprop="name">Lua</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2016/09/07/lua-and-c/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2016/09/07/lua-and-c/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Lua栈"><a href="#Lua栈" class="headerlink" title="Lua栈"></a>Lua栈</h1><p>要理解Lua和C++交互，首先要理解Lua堆栈。简单来说，Lua和C/C++语言通信的主要方法是一个无处不在的虚拟栈。栈的特点是先进后出</p>
+<p>在Lua中，Lua堆栈就是一个struct，堆栈索引的方式可是是正数也可以是负数，区别是：正数索引1永远表示栈底，负数索引-1永远表示栈顶,如图：<br><img src="http://image.hanschen.site/master/2019-9-2-10-56-15.png" alt="2019-9-2-10-56-15.png"></p>
+<p>入栈的数据类型包括数值, 字符串, 指针, talbe, 闭包等, 下面是一个栈的例子:<br><img src="http://image.hanschen.site/master/2019-9-2-10-56-27.png" alt="2019-9-2-10-56-27.png"></p>
+<a id="more"></a>
+
+<p>执行下面的代码就可以让你的lua栈上呈现图中的情况:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建并压入一个闭包</span></span><br><span class="line">lua_pushcclosure(L, func, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 新建并压入一个表</span></span><br><span class="line">lua_createtable(L, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 压入一个数字</span></span><br><span class="line">lua_pushnumber(L, <span class="number">100</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 压入一个字符串</span></span><br><span class="line">lua_pushstring(L, <span class="string">"hello，lua"</span>);</span><br></pre></td></tr></table></figure>
+
+<p>这里要说明的是, 你压入的类型有数值, 字符串, 表和闭包[在c中看来是不同类型的值], 但是最后都是统一用TValue这种数据结构来保存的,下面用图简单的说明一下这种数据结构:<br><img src="http://image.hanschen.site/master/2019-9-2-10-56-39.png" alt="2019-9-2-10-56-39.png"></p>
+<p>TValue结构对应于lua中的所有数据类型, 是一个{值, 类型} 结构,这就lua中动态类型的实现, 它把值和类型绑在一起, 用tt记录value的类型, value是一个联合结构, 由Value定义, 可以看到这个联合有四个域, 先说明简单的</p>
+<ul>
+<li>p – 可以存一个指针, 实际上是lua中的light userdata结构</li>
+<li>n – 所有的数值存在这里, 不过是int , 还是float</li>
+<li>b – Boolean值存在这里, 注意, lua_pushinteger不是存在这里, 而是存在n中, b只存布尔</li>
+<li>gc – 其他诸如table, thread, closure,string需要内存管理垃圾回收的类型都存在这里,gc是一个指针, 它可以指向的类型由联合体GCObject定义, 从图中可以看出, 有string, userdata, closure, table, proto, upvalue, thread</li>
+</ul>
+<p>可以的得出如下结论:</p>
+<ol>
+<li>lua中, number, boolean, nil, light userdata四种类型的值是直接存在栈上元素里的, 和垃圾回收无关.</li>
+<li>lua中, string, table, closure, userdata, thread存在栈上元素里的只是指针, 他们都会在生命周期结束后被垃圾回收.</li>
+</ol>
+<h1 id="堆栈的操作"><a href="#堆栈的操作" class="headerlink" title="堆栈的操作"></a>堆栈的操作</h1><p>因为Lua与C/C++是通过栈来通信，我们先来看一个最简单的例子:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"../lua/lauxlib.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">const</span> <span class="keyword">char</span> *argv[])</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//1.创建一个state</span></span><br><span class="line">    lua_State *L = luaL_newstate();</span><br><span class="line"></span><br><span class="line">    <span class="comment">//2.入栈操作</span></span><br><span class="line">    lua_pushstring(L, <span class="string">"I am so cool~"</span>);</span><br><span class="line">    lua_pushnumber(L, <span class="number">20</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//3.取值操作</span></span><br><span class="line">    <span class="keyword">if</span> (lua_isstring(L, <span class="number">1</span>)) &#123; <span class="comment">//这里的index也可以是-2</span></span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"[line:%d] lua_tostring(L, 1):%s\n"</span>, __LINE__, lua_tostring(L, <span class="number">1</span>));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (lua_isnumber(L, <span class="number">2</span>)) &#123; <span class="comment">//这里的index也可以是-1</span></span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"[line:%d] lua_tonumber(L, 2):%f\n"</span>, __LINE__, lua_tonumber(L, <span class="number">2</span>));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//4.关闭state</span></span><br><span class="line">    lua_close(L);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其他一些栈操作：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//返回栈顶索引（即栈长度）  </span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">lua_gettop</span> <span class="params">(lua_State *L)</span></span>; </span><br><span class="line"></span><br><span class="line"><span class="comment">//将栈顶设置为一个指定的位置，即修改栈中元素的数量。如果值比原栈顶高，则高的部分nil补足，如果值比原栈低，则原栈高出的部分舍弃。所以可以用lua_settop(0)来清空栈</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">lua_settop</span> <span class="params">(lua_State *L, <span class="keyword">int</span> idx)</span></span>; </span><br><span class="line"></span><br><span class="line"><span class="comment">//新增一个元素到栈顶，值与index位置的值相同</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">lua_pushvalue</span><span class="params">(lua_State *L, <span class="keyword">int</span> idx)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//移除idx索引上的值，高于index的元素的索引将全部-1  </span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">lua_remove</span><span class="params">(lua_State *L, <span class="keyword">int</span> idx)</span></span>; </span><br><span class="line"></span><br><span class="line"><span class="comment">//把栈顶元素挪到index位置，原index位置的元素往栈顶移动</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">lua_insert</span><span class="params">(lua_State *L, <span class="keyword">int</span> idx)</span></span>; </span><br><span class="line"></span><br><span class="line"><span class="comment">//把栈顶元素挪到index位置，并删除原index位置的元素</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">lua_replace</span> <span class="params">(lua_State *L, <span class="keyword">int</span> idx)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<h1 id="C调用Lua"><a href="#C调用Lua" class="headerlink" title="C调用Lua"></a>C调用Lua</h1><p>现在有这样一个hello.lua 文件：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">str = <span class="string">"Hello, Lua !"</span></span><br><span class="line">table = &#123;name = <span class="string">"hans"</span>, id = <span class="number">123456</span>&#125;</span><br><span class="line"></span><br><span class="line">function add(x, y)</span><br><span class="line">	<span class="keyword">return</span> x + y</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+
+<p>我们写一个main.c来读取它：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"../lua/lauxlib.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="function">lua_State *<span class="title">load_lua</span><span class="params">(<span class="keyword">char</span> *filename)</span> </span>&#123;</span><br><span class="line">    lua_State *L = luaL_newstate();</span><br><span class="line">    luaL_openlibs(L);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//加载脚本并运行</span></span><br><span class="line">    <span class="keyword">if</span> (luaL_loadfile(L, filename) || lua_pcall(L, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>)) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"load Lua script failed: %s\n"</span>, lua_tostring(L, <span class="number">-1</span>));</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> L;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">const</span> <span class="keyword">char</span> *argv[])</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">char</span>* lua_filename = <span class="string">"E:\\work\\luaJni\\resource\\test.lua"</span>;</span><br><span class="line">    lua_State *L = load_lua(lua_filename);</span><br><span class="line">    <span class="keyword">if</span> (<span class="literal">NULL</span> == L) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//读取变量</span></span><br><span class="line">    lua_getglobal(L, <span class="string">"str"</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"[line:%d] luaV_tostring(L, -1):%s\n"</span>, __LINE__, lua_tostring(L, <span class="number">-1</span>));</span><br><span class="line"></span><br><span class="line">    <span class="comment">//读取table</span></span><br><span class="line">    lua_getglobal(L, <span class="string">"table"</span>);</span><br><span class="line">    lua_getfield(L, <span class="number">-1</span>, <span class="string">"name"</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"[line:%d] lua_tostring(L,-1);:%s\n"</span>, __LINE__, lua_tostring(L, <span class="number">-1</span>));</span><br><span class="line"></span><br><span class="line">    <span class="comment">//调用函数</span></span><br><span class="line">    lua_getglobal(L, <span class="string">"add"</span>); <span class="comment">//读取函数到栈顶</span></span><br><span class="line">    lua_pushnumber(L, <span class="number">10</span>); <span class="comment">//压入参数</span></span><br><span class="line">    lua_pushnumber(L, <span class="number">20</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (lua_pcall(L, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>) != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"lua_pcall failed: %s\n"</span>, lua_tostring(L, <span class="number">-1</span>));</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">int</span> result = lua_tonumber(L, <span class="number">-1</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"[line:%d] result:%d\n"</span>, __LINE__, result);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//至此，栈中的情况是：</span></span><br><span class="line">    <span class="comment">//=================== 栈顶 ===================</span></span><br><span class="line">    <span class="comment">//  索引  类型      值</span></span><br><span class="line">    <span class="comment">//   4   int：      30</span></span><br><span class="line">    <span class="comment">//   3   string：   hans</span></span><br><span class="line">    <span class="comment">//   2   table:     table</span></span><br><span class="line">    <span class="comment">//   1   string:    Hello, Lua !</span></span><br><span class="line">    <span class="comment">//=================== 栈底 ===================</span></span><br><span class="line">    lua_close(L);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>知道怎么读取后，我们来看下如何修改上面代码中table的值：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//将需要设置的值设置到栈中  </span></span><br><span class="line">lua_pushstring(L, <span class="string">"Hello，hahaha"</span>);  </span><br><span class="line"><span class="comment">//将这个值设置到table中（此时table在栈的位置为2）  </span></span><br><span class="line">lua_setfield(L, <span class="number">2</span>, <span class="string">"name"</span>);</span><br></pre></td></tr></table></figure>
+
+<p>我们还可以新建一个table：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//创建一个新的table，并压入栈  </span></span><br><span class="line">lua_newtable(L);  </span><br><span class="line"><span class="comment">//往table中设置值  </span></span><br><span class="line">lua_pushstring(L, <span class="string">"hello, new table !"</span>); <span class="comment">//将值压入栈  </span></span><br><span class="line">lua_setfield(L, <span class="number">-2</span>, <span class="string">"str"</span>); <span class="comment">//将值设置到table中，并将hello, new table !出栈</span></span><br></pre></td></tr></table></figure>
+
+<p>需要注意的是：栈操作是基于栈顶的，就是说它只会去操作栈顶的值。<br>举个比较简单的例子，函数调用流程是先将函数入栈，参数入栈，然后用lua_pcall调用函数，此时栈顶为参数，栈底为函数，所以栈过程大致会是：参数出栈-&gt;保存参数-&gt;函数出栈-&gt;调用函数-&gt;返回结果入栈</p>
+<p>类似的还有lua_setfield，设置一个表的值，肯定要先将值出栈，保存，再去找表的位置</p>
+<h1 id="Lua调用C"><a href="#Lua调用C" class="headerlink" title="Lua调用C"></a>Lua调用C</h1><p>我们可以加入我们自己的函数。函数要遵循规范（可在lua.h中查看）如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//所有的函数必须接收一个lua_State作为参数，同时返回一个整数值。因为这个函数使用Lua栈作为参数，所以它可以从栈里面读取任意数量和任意类型的参数。而这个函数的返回值则表示函数返回时有多少返回值被压入Lua栈</span></span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">int</span> <span class="params">(*lua_CFunction)</span> <span class="params">(lua_State *L)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">--lua_call_c.lua</span></span><br><span class="line">a, b = getTwoVar(<span class="string">'hello, this string is from lua world'</span>, <span class="number">123</span>)</span><br><span class="line"><span class="built_in">print</span>(a, b)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 定义在lua中可调用的函数，要遵循规范：返回值必须为int，需传入lua_State</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">getTwoVar</span><span class="params">(lua_State *L)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    dumpStack(L);</span><br><span class="line">    <span class="comment">//    =================== 栈顶 ===================</span></span><br><span class="line">    <span class="comment">//    index     type         value</span></span><br><span class="line">    <span class="comment">//    2         number       123.000000</span></span><br><span class="line">    <span class="comment">//    1         string       hello, this string is from lua world</span></span><br><span class="line">    <span class="comment">//    =================== 栈底 ===================</span></span><br><span class="line">    lua_pushnumber(L, <span class="number">10</span>);</span><br><span class="line">    lua_pushstring(L, <span class="string">"hello"</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">2</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">lua_call_c</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">char</span>* lua_filename = <span class="string">"E:\\work\\luaJni\\resource\\lua_call_c.lua"</span>;</span><br><span class="line">    lua_State *L = load_lua(lua_filename, FALSE);</span><br><span class="line">    <span class="keyword">if</span> (<span class="literal">NULL</span> == L) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    lua_register(L, <span class="string">"getTwoVar"</span>, getTwoVar);</span><br><span class="line">    lua_pcall(L, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>还可以使用dll动态链接的方式，把c实现的代码打包成dll<br>h文件如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> once  </span></span><br><span class="line"><span class="keyword">extern</span> <span class="string">"C"</span> &#123;  </span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"lua.h"</span>  </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"lualib.h"</span>  </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"lauxlib.h"</span>  </span></span><br><span class="line">&#125;  </span><br><span class="line">   </span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> LUA_EXPORTS  </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> LUA_API __declspec(dllexport)  </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span>  </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> LUA_API __declspec(dllimport)  </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span>  </span></span><br><span class="line">   </span><br><span class="line"><span class="keyword">extern</span> <span class="string">"C"</span> <span class="function">LUA_API <span class="keyword">int</span> <span class="title">luaopen_mLualib</span><span class="params">(lua_State *L)</span></span>;<span class="comment">//定义导出函数</span></span><br></pre></td></tr></table></figure>
+
+<p>C文件如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;  </span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"mLualib.h"</span>  </span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">averageFunc</span><span class="params">(lua_State *L)</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line">    <span class="keyword">int</span> n = lua_gettop(L);  </span><br><span class="line">    <span class="keyword">double</span> sum = <span class="number">0</span>;  </span><br><span class="line">    <span class="keyword">int</span> i;  </span><br><span class="line">   </span><br><span class="line">    <span class="comment">/* 循环求参数之和 */</span>  </span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">1</span>; i &lt;= n; i++)  </span><br><span class="line">        sum += lua_tonumber(L, i);  </span><br><span class="line">   </span><br><span class="line">    lua_pushnumber(L, sum / n);     <span class="comment">//压入平均值  </span></span><br><span class="line">    lua_pushnumber(L, sum);         <span class="comment">//压入和  </span></span><br><span class="line">   </span><br><span class="line">    <span class="keyword">return</span> <span class="number">2</span>;                       <span class="comment">//返回两个结果  </span></span><br><span class="line">&#125;  </span><br><span class="line">   </span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">sayHelloFunc</span><span class="params">(lua_State* L)</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"hello world!"</span>);  </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;  </span><br><span class="line">&#125;  </span><br><span class="line">   </span><br><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">luaL_Reg</span> <span class="title">myLib</span>[] =   </span></span><br><span class="line"><span class="class">&#123;</span>  </span><br><span class="line">    &#123;<span class="string">"average"</span>, averageFunc&#125;,  </span><br><span class="line">    &#123;<span class="string">"sayHello"</span>, sayHelloFunc&#125;,  </span><br><span class="line">    &#123;<span class="literal">NULL</span>, <span class="literal">NULL</span>&#125;       <span class="comment">//数组中最后一对必须是&#123;NULL, NULL&#125;，用来表示结束      </span></span><br><span class="line">&#125;;  </span><br><span class="line">   </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">luaopen_mLualib</span><span class="params">(lua_State *L)</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line">    luaL_register(L, <span class="string">"ss"</span>, myLib);  </span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;       <span class="comment">// 把myLib表压入了栈中，所以就需要返回1  </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在lua中我们这样子来调用（调用之前记得把dll文件复制到lua文件目录下）：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">require</span> <span class="string">"mylib"</span>  </span><br><span class="line"><span class="keyword">local</span> ave,sum = ss.average(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>) <span class="comment">-- 参数对应堆栈中的数据  </span></span><br><span class="line"><span class="built_in">print</span>(ave,sum)  <span class="comment">-- 3 15  </span></span><br><span class="line">ss.sayHello()   <span class="comment">-- hello world!</span></span><br></pre></td></tr></table></figure>
+
+<p>至此都发生了什么呢？梳理一下：</p>
+<ol>
+<li>我们编写了averageFunc求平均值和sayHelloFunc函数</li>
+<li>然后把函数封装myLib数组里面，类型必须是luaL_Reg</li>
+<li>由luaopen_mLualib函数导出并在lua中注册这两个函数</li>
+</ol>
+<p>实际上当我们在Lua中：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">require</span> <span class="string">"mLualib"</span></span><br></pre></td></tr></table></figure>
+
+<p>这样子写的时候，Lua会这么干：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> <span class="built_in">path</span> = <span class="string">"mLualib.dll"</span>    </span><br><span class="line"><span class="keyword">local</span> f = <span class="built_in">package</span>.<span class="built_in">loadlib</span>(<span class="built_in">path</span>,<span class="string">"luaopen_mLualib"</span>)   <span class="comment">-- 返回luaopen_mLualib函数 </span></span><br><span class="line">f()</span><br></pre></td></tr></table></figure>
+
+<p>所以当我们在编写一个这样的模块的时候，编写luaopen_xxx导出函数的时候，xxx最好是和项目名一样</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ul>
+<li>Lua和C++是通过一个虚拟栈来交互的。</li>
+<li>C调用Lua实际上是：由C先把数据放入栈中，由Lua去栈中取数据，然后返回数据对应的值到栈顶，再由栈顶返回C</li>
+<li>Lua调C也一样：先编写自己的C模块，然后注册函数到Lua解释器中，然后由Lua去调用这个模块的函数</li>
+</ul>
+<p>本文不涉及lua语法学习，如果有需要，请移步：<a href="http://book.luaer.cn/" target="_blank" rel="noopener">http://book.luaer.cn/</a></p>
+
+    </div>
+
+    
+    
+    
+      <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center;">
+  <img id="wechat_subscriber_qcode" src="/images/wechat-qcode.png" alt="chenhang wechat" style="width: 200px; max-width: 100%;">
+  <div></div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/lua/" rel="tag"># lua</a>
+              <a href="/tags/lua和c交互/" rel="tag"># lua和c交互</a>
+              <a href="/tags/lua和c/" rel="tag"># lua和c</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2016/08/30/lua-guide/" rel="prev" title="Lua快速入门">
+      <i class="fa fa-chevron-left"></i> Lua快速入门
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2016/09/15/proguard/" rel="next" title="ProGuard代码混淆详细攻略">
+      ProGuard代码混淆详细攻略 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Lua栈"><span class="nav-text">Lua栈</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#堆栈的操作"><span class="nav-text">堆栈的操作</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#C调用Lua"><span class="nav-text">C调用Lua</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lua调用C"><span class="nav-text">Lua调用C</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="chenhang"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">chenhang</p>
+  <div class="site-description" itemprop="description">博观而约取，厚积而薄发。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">61</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/shensky711" title="GitHub → https://github.com/shensky711" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/shensky711" title="CSDN → https://blog.csdn.net/shensky711" rel="noopener" target="_blank"><i class="fa fa-fw fa-archive"></i>CSDN</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:shensky711@gmail.com" title="E-Mail → mailto:shensky711@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">chenhang</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">284k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">4:18</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'ST1hmgzJfF6c44BNUyK56qad-gzGzoHsz',
+      appKey     : 'Wy4dwHBHU556tTDardpzBI3i',
+      placeholder: "说点什么吧~",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

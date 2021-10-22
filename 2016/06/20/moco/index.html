@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="bMH0URCoOdzdhSMyGeDuGebWiSxHnJsOLundsaPEZbc">
+  <meta name="msvalidate.01" content="EC8F55291A196E9DD39DDDB134E93A69">
+  <meta name="baidu-site-verification" content="QC6bRBu8qm">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.hanschen.site","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Moco介绍在开发过程中，经常会使用到一些http网络接口，而这部分功能通常是由第三方开发团队或者是后端同事进行开发的，在我们开发时不能给我们提供服务，更有甚者，要集成的服务在开发时还不存在。这为我们的联调和测试造成了麻烦，常见的解决方案是搭建一个web server。 为什么要开发Moco这个框架？ 具体到模拟服务上，处理的手法也是各种各样，因为服务以HTTP集成居多，无论是Web Servic">
+<meta name="keywords" content="Moco,mock,server">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mock Server利器 - Moco">
+<meta property="og:url" content="http://blog.hanschen.site/2016/06/20/moco/index.html">
+<meta property="og:site_name" content="HansChen 的博客">
+<meta property="og:description" content="Moco介绍在开发过程中，经常会使用到一些http网络接口，而这部分功能通常是由第三方开发团队或者是后端同事进行开发的，在我们开发时不能给我们提供服务，更有甚者，要集成的服务在开发时还不存在。这为我们的联调和测试造成了麻烦，常见的解决方案是搭建一个web server。 为什么要开发Moco这个框架？ 具体到模拟服务上，处理的手法也是各种各样，因为服务以HTTP集成居多，无论是Web Servic">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/3h05ltud8y33vdpr6tgavd2r/image_1aukc7jbn1rh51p2ma761dd5v4j9.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/qgm8s0heu9dcao7in6o1mfbg/image_1aukcamtmf2v14d14pi1r5ria6m.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/xdrhhy7xv9766xq7xqwfvu6i/image_1aukcdkko1htkpba1hjt14srit213.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/mb8aroi0c771pl1jj654sfpl/image_1aukces4c1bld1ilv120vtc713rk1g.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/gl19od35r2nl4f7lq5vhsc5k/image_1aukcg2219uc4a89v2eia169i1t.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/qyyoyvt6omhkukinhvv1il0j/image_1aukcgr1h1pvg1iqede15mtjtv2a.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/8d8gxov6kilvj77mk94enk2c/image_1aukcheemo95pmp1q351n0vjq12n.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/ct7ouvv15ppfh31j4sd69gb8/image_1aukci164cq717av19nc1cp0b0q34.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/bdqa49na3846ciybax875hbf/image_1aukcin2p1cnoenf1nfe1hn895u3h.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/c6z2jpqcmbcxih8u3ujab8zp/image_1aukp23qh1io01g611k67l49ie9.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/025fghuk05gd89s1b9hv68hh/image_1aukp2ppph2215lv4mp165n1begm.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/bnw53j7e4bar44g1t4613kat/image_1aukp3eip1unv1s971l1s8ke1pr713.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/3zpaq715pktsx4sebxk01d7v/image_1aukp4l8rblj9p712cq13au1nlc1g.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/vzc3uqnqu1gia4tccilr0q4v/image_1aukp54ud10dcbhi1a981sii1j1t.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/diivcobhkzd26dgb1bnknxc8/image_1aukp62mg1c1p1ilpa371fg71okd2a.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/9ja5q2m5ea3j3uy79zfe7l8p/image_1aukp6kjk1cgktok1ksl3pl11ra2n.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/wyko8tbtdgtdcrxlshg1anhi/image_1aukp79rk6stah19u7138o10df34.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/s9ww5qx97d045zlmd9cmw6ah/image_1aukpa21f1nt21hrq15iv5111lcc3h.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/d0nkyipcu9k65z19geo066pb/image_1aukpam111jae1kj31trj1vqau2d3u.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/tw26ay8qwfmd6q0gxlthjmpo/image_1aukpb88b17f119i1oatsdi1pti4b.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/1wz38ibvqmu8ucp5ss1c9o6i/image_1aukpboqh15l6ib31gvrcjo1dbq4o.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/50qkgojcvjzw42ou8cwf4pjx/image_1aukpca591qrht381uv31cvt43g55.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/lf6kxs6caal95ob5nsuvn2hs/image_1aukpcqun1tq911n314fv1o8r12hi5i.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/5ax8j2inbou4mu0tkgsgdfhf/image_1aukpdacf1sq3p241s14qbqdnb5v.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/j8kh8i7yz19kd7lh4779xwor/image_1aukpfh4037cdgjsdoevg10396c.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/butmpkdh2k8zh86nh0o10nv5/image_1aukpgl0jlqs7fn10ha1e5n1kmu6p.png">
+<meta property="og:image" content="http://static.zybuluo.com/shensky711/2z4kqm8upxuml8jv61z5794n/image_1aukph7s4vpdjegi1fkp1jfn76.png">
+<meta property="og:updated_time" content="2021-10-21T01:42:39.219Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Mock Server利器 - Moco">
+<meta name="twitter:description" content="Moco介绍在开发过程中，经常会使用到一些http网络接口，而这部分功能通常是由第三方开发团队或者是后端同事进行开发的，在我们开发时不能给我们提供服务，更有甚者，要集成的服务在开发时还不存在。这为我们的联调和测试造成了麻烦，常见的解决方案是搭建一个web server。 为什么要开发Moco这个框架？ 具体到模拟服务上，处理的手法也是各种各样，因为服务以HTTP集成居多，无论是Web Servic">
+<meta name="twitter:image" content="http://static.zybuluo.com/shensky711/3h05ltud8y33vdpr6tgavd2r/image_1aukc7jbn1rh51p2ma761dd5v4j9.png">
+
+<link rel="canonical" href="http://blog.hanschen.site/2016/06/20/moco/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Mock Server利器 - Moco | HansChen 的博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?cae9425eed9e207f553597421f71ddad";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">HansChen 的博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类<span class="badge">8</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签<span class="badge">61</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">31</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/shensky711" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.hanschen.site/2016/06/20/moco/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="chenhang">
+      <meta itemprop="description" content="博观而约取，厚积而薄发。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HansChen 的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Mock Server利器 - Moco
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2016-06-20 00:00:00" itemprop="dateCreated datePublished" datetime="2016-06-20T00:00:00+08:00">2016-06-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-10-21 09:42:39" itemprop="dateModified" datetime="2021-10-21T09:42:39+08:00">2021-10-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/测试/" itemprop="url" rel="index"><span itemprop="name">测试</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2016/06/20/moco/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2016/06/20/moco/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Moco介绍"><a href="#Moco介绍" class="headerlink" title="Moco介绍"></a>Moco介绍</h1><p>在开发过程中，经常会使用到一些http网络接口，而这部分功能通常是由第三方开发团队或者是后端同事进行开发的，在我们开发时不能给我们提供服务，更有甚者，要集成的服务在开发时还不存在。这为我们的联调和测试造成了麻烦，常见的解决方案是搭建一个web server。</p>
+<p>为什么要开发Moco这个框架？</p>
+<p>具体到模拟服务上，处理的手法也是各种各样，因为服务以HTTP集成居多，无论是Web Service，还是REST，所以，一种典型的做法是，开发一个模拟服务，打成WAR包，部署到一个应用服务器上。而我们知道，一旦牵扯到应用服务器部署，就是非常耗时的，部署的时间量级通常是分钟级的。而且，模拟服务器通常不是一次性的工作，我们需要在开发过程中，反复调整，这就进一步增加了维护一个模拟服务器的成本。有的应用服务器是非常消耗资源的，要用专门的机器来部署它。更进一步，如果机器资源有限，团队就只能共享一台机器，这样，即便我为测试自己的部分做一个小的改动，很有可能因为得不到机器的使用权，而要等上几天时间</p>
+<p>Moco就是针对这样一个特定的场景而生的。<strong>Moco是一个简单搭建模拟服务器的程序库/工具</strong>，这个基于 Java 开发的开源项目已经在 Github 上获得了不少的关注。该项目的简介是这样描述自己的：Moco 是一个简单搭建 stub 的框架，主要用于测试和集成。</p>
+<a id="more"></a>
+
+<p>开发团队只要根据自己的需要进行相应的配置，就会很方便得到一个模拟服务器。而且，由于 Moco 本身的灵活性，其用途已经不再局限于最初的集成测试，比如，Moco 可以用于移动开发，模拟尚未开发的服务；Moco 还可以用于前端开发，模拟一个完整的 Web 服务器等等。</p>
+<p>Moco本身<strong>支持API和独立运行两种方式</strong>。通过使用API，开发人员可以在JUnit、JBehave等测试测试框架里使用Moco，极大程度地降低了集成点测试的复杂度</p>
+<p>Moco可以提供以下服务：</p>
+<ul>
+<li>HTTP APIs </li>
+<li>Socket APIs </li>
+<li>REST API</li>
+</ul>
+<p>Moco原理简介：Moco会根据一些配置，启动一个真正的HTTP服务（会监听本地的某个端口）。当发起请求满足一个条件时，它就给回复一个应答。Moco的底层没有依赖于像Servlet这样的重型框架，而是基于一个叫Netty网络应用框架直接编写的，这样一来，绕过了复杂的应用服务器，所以，它的速度是极快的</p>
+<p>Moco已经在github上开源，可点击连接：<a href="https://github.com/dreamhead/moco" target="_blank" rel="noopener">https://github.com/dreamhead/moco</a></p>
+<h1 id="Moco独立运行所需环境"><a href="#Moco独立运行所需环境" class="headerlink" title="Moco独立运行所需环境"></a>Moco独立运行所需环境</h1><p>Moco独立运行时所需准备的有：</p>
+<ul>
+<li>Java运行环境</li>
+<li>moco-runner-0.11.0-standalone.jar</li>
+</ul>
+<h1 id="如何运行Moco"><a href="#如何运行Moco" class="headerlink" title="如何运行Moco"></a>如何运行Moco</h1><h2 id="启动http服务"><a href="#启动http服务" class="headerlink" title="启动http服务"></a>启动http服务</h2><p>Moco的运行非常简单，只需要一行命令即可<br>如在命令行中运行：<code>java -jar &lt;path-to-moco-runner&gt; http -p &lt;monitor-port&gt; -c &lt; configuration -file&gt;</code></p>
+<ul>
+<li><code>&lt;path-to-moco-runner&gt;</code>：moco-runner-0.11.0-standalone.jar包的路径</li>
+<li><code>&lt;monitor-port&gt;</code>：http服务监听的端口</li>
+<li><code>&lt;configuration -file&gt;</code>：配置文件路径</li>
+</ul>
+<p><img src="http://static.zybuluo.com/shensky711/3h05ltud8y33vdpr6tgavd2r/image_1aukc7jbn1rh51p2ma761dd5v4j9.png" alt="image_1aukc7jbn1rh51p2ma761dd5v4j9.png-52.4kB"></p>
+<p>这就在本地启动了一个http server，其中监听端口为12345，配置文件是MocoApi.json。只要在本机发起一个请求，如：<a href="http://localhost:12345，该请求就会被这个web" target="_blank" rel="noopener">http://localhost:12345，该请求就会被这个web</a> server handle</p>
+<p>如果别的机子想访问这个服务，只要把localhost替换成本机IP即可</p>
+<h2 id="启动https服务"><a href="#启动https服务" class="headerlink" title="启动https服务"></a>启动https服务</h2><p>启动https服务，需要先生成证书，并用如下命令启动服务：地方多发呆发地方的地方的地方的发呆发：<code>java -jar &lt;path-to-moco-runner&gt; https -p &lt;monitor-port&gt; -c &lt; configuration -file&gt; --https  &lt;path-to-cert.jks &gt; --cert mocohttps --keystore mocohttps</code></p>
+<ul>
+<li><code>&lt;path-to-moco-runner&gt;</code>：moco-runner-0.11.0-standalone.jar包的路径</li>
+<li><code>&lt;monitor-port&gt;</code>：http服务监听的端口</li>
+<li><code>&lt;configuration -file&gt;</code>：配置文件路径</li>
+<li><code>&lt;path-to-cert.jks&gt;</code>：证书路径</li>
+</ul>
+<p><img src="http://static.zybuluo.com/shensky711/qgm8s0heu9dcao7in6o1mfbg/image_1aukcamtmf2v14d14pi1r5ria6m.png" alt="image_1aukcamtmf2v14d14pi1r5ria6m.png-46.1kB"></p>
+<p>这就在本地启动了一个http server，其中监听端口是12346，配置文件是MocoApi.json，证书文件是test.cer</p>
+<h1 id="Moco-HTTP-s-API配置"><a href="#Moco-HTTP-s-API配置" class="headerlink" title="Moco HTTP(s) API配置"></a>Moco HTTP(s) API配置</h1><p>启动服务之后，必然会根据需求stub出各种各样接口反馈，我们会把这个配置放在一个json文件中，启动Moco的时候，需要指定使用的配置文件路径，这样配置就可以生效了。Moco服务可以检测到配置文件的变更，假如你修改了配置文件，不需要重新启动Moco，服务照样可以生效。更详细的配置介绍请查看：<a href="https://github.com/dreamhead/moco/blob/master/moco-doc/apis.md" target="_blank" rel="noopener">https://github.com/dreamhead/moco/blob/master/moco-doc/apis.md</a></p>
+<p>配置文件的工作原理大致如下：<br><img src="http://static.zybuluo.com/shensky711/xdrhhy7xv9766xq7xqwfvu6i/image_1aukcdkko1htkpba1hjt14srit213.png" alt="image_1aukcdkko1htkpba1hjt14srit213.png-53.4kB"></p>
+<h2 id="如何在配置文件添加注释"><a href="#如何在配置文件添加注释" class="headerlink" title="如何在配置文件添加注释"></a>如何在配置文件添加注释</h2><p><strong>json不支持注释</strong>，想要添加注释的话，可以在description字段中加入描述<br><img src="http://static.zybuluo.com/shensky711/mb8aroi0c771pl1jj654sfpl/image_1aukces4c1bld1ilv120vtc713rk1g.png" alt="image_1aukces4c1bld1ilv120vtc713rk1g.png-21.5kB"></p>
+<h2 id="约定请求Body"><a href="#约定请求Body" class="headerlink" title="约定请求Body"></a>约定请求Body</h2><p><img src="http://static.zybuluo.com/shensky711/gl19od35r2nl4f7lq5vhsc5k/image_1aukcg2219uc4a89v2eia169i1t.png" alt="image_1aukcg2219uc4a89v2eia169i1t.png-63.5kB"></p>
+<h2 id="约定接口的uri"><a href="#约定接口的uri" class="headerlink" title="约定接口的uri"></a>约定接口的uri</h2><p><img src="http://static.zybuluo.com/shensky711/qyyoyvt6omhkukinhvv1il0j/image_1aukcgr1h1pvg1iqede15mtjtv2a.png" alt="image_1aukcgr1h1pvg1iqede15mtjtv2a.png-35.2kB"></p>
+<h2 id="约定请求参数"><a href="#约定请求参数" class="headerlink" title="约定请求参数"></a>约定请求参数</h2><p><img src="http://static.zybuluo.com/shensky711/8d8gxov6kilvj77mk94enk2c/image_1aukcheemo95pmp1q351n0vjq12n.png" alt="image_1aukcheemo95pmp1q351n0vjq12n.png-40.6kB"></p>
+<h2 id="约定请求方法"><a href="#约定请求方法" class="headerlink" title="约定请求方法"></a>约定请求方法</h2><p><img src="http://static.zybuluo.com/shensky711/ct7ouvv15ppfh31j4sd69gb8/image_1aukci164cq717av19nc1cp0b0q34.png" alt="image_1aukci164cq717av19nc1cp0b0q34.png-32.7kB"></p>
+<h2 id="约定HTTP版本"><a href="#约定HTTP版本" class="headerlink" title="约定HTTP版本"></a>约定HTTP版本</h2><p><img src="http://static.zybuluo.com/shensky711/bdqa49na3846ciybax875hbf/image_1aukcin2p1cnoenf1nfe1hn895u3h.png" alt="image_1aukcin2p1cnoenf1nfe1hn895u3h.png-38.2kB"></p>
+<h2 id="约定请求头部"><a href="#约定请求头部" class="headerlink" title="约定请求头部"></a>约定请求头部</h2><p><img src="http://static.zybuluo.com/shensky711/c6z2jpqcmbcxih8u3ujab8zp/image_1aukp23qh1io01g611k67l49ie9.png" alt="image_1aukp23qh1io01g611k67l49ie9.png-47.6kB"></p>
+<h2 id="约定cookie"><a href="#约定cookie" class="headerlink" title="约定cookie"></a>约定cookie</h2><p><img src="http://static.zybuluo.com/shensky711/025fghuk05gd89s1b9hv68hh/image_1aukp2ppph2215lv4mp165n1begm.png" alt="image_1aukp2ppph2215lv4mp165n1begm.png-45.5kB"></p>
+<h2 id="约定请求form"><a href="#约定请求form" class="headerlink" title="约定请求form"></a>约定请求form</h2><p><img src="http://static.zybuluo.com/shensky711/bnw53j7e4bar44g1t4613kat/image_1aukp3eip1unv1s971l1s8ke1pr713.png" alt="image_1aukp3eip1unv1s971l1s8ke1pr713.png-47.1kB"></p>
+<p>表单可以添加多项，多项的时候，必须全部匹配，接口才算匹配成功</p>
+<h2 id="约定以指定xml作为请求body"><a href="#约定以指定xml作为请求body" class="headerlink" title="约定以指定xml作为请求body"></a>约定以指定xml作为请求body</h2><p><img src="http://static.zybuluo.com/shensky711/3zpaq715pktsx4sebxk01d7v/image_1aukp4l8rblj9p712cq13au1nlc1g.png" alt="image_1aukp4l8rblj9p712cq13au1nlc1g.png-69.9kB"></p>
+<h2 id="用xpath对请求进行匹配"><a href="#用xpath对请求进行匹配" class="headerlink" title="用xpath对请求进行匹配"></a>用xpath对请求进行匹配</h2><p><img src="http://static.zybuluo.com/shensky711/vzc3uqnqu1gia4tccilr0q4v/image_1aukp54ud10dcbhi1a981sii1j1t.png" alt="image_1aukp54ud10dcbhi1a981sii1j1t.png-47.8kB"></p>
+<h2 id="约定以指定json作为请求body"><a href="#约定以指定json作为请求body" class="headerlink" title="约定以指定json作为请求body"></a>约定以指定json作为请求body</h2><p><img src="http://static.zybuluo.com/shensky711/diivcobhkzd26dgb1bnknxc8/image_1aukp62mg1c1p1ilpa371fg71okd2a.png" alt="image_1aukp62mg1c1p1ilpa371fg71okd2a.png-118.5kB"></p>
+<h2 id="用正则表达式对请求进行匹配"><a href="#用正则表达式对请求进行匹配" class="headerlink" title="用正则表达式对请求进行匹配"></a>用正则表达式对请求进行匹配</h2><p><img src="http://static.zybuluo.com/shensky711/9ja5q2m5ea3j3uy79zfe7l8p/image_1aukp6kjk1cgktok1ksl3pl11ra2n.png" alt="image_1aukp6kjk1cgktok1ksl3pl11ra2n.png-50.1kB"></p>
+<h2 id="匹配操作"><a href="#匹配操作" class="headerlink" title="匹配操作"></a>匹配操作</h2><p><img src="http://static.zybuluo.com/shensky711/wyko8tbtdgtdcrxlshg1anhi/image_1aukp79rk6stah19u7138o10df34.png" alt="image_1aukp79rk6stah19u7138o10df34.png-132kB"></p>
+<h2 id="设置Response-content"><a href="#设置Response-content" class="headerlink" title="设置Response content"></a>设置Response content</h2><p><img src="http://static.zybuluo.com/shensky711/s9ww5qx97d045zlmd9cmw6ah/image_1aukpa21f1nt21hrq15iv5111lcc3h.png" alt="image_1aukpa21f1nt21hrq15iv5111lcc3h.png-71kB"></p>
+<h2 id="设置Response-状态码"><a href="#设置Response-状态码" class="headerlink" title="设置Response 状态码"></a>设置Response 状态码</h2><p><img src="http://static.zybuluo.com/shensky711/d0nkyipcu9k65z19geo066pb/image_1aukpam111jae1kj31trj1vqau2d3u.png" alt="image_1aukpam111jae1kj31trj1vqau2d3u.png-50.7kB"></p>
+<h2 id="设置Response-HTTP版本"><a href="#设置Response-HTTP版本" class="headerlink" title="设置Response HTTP版本"></a>设置Response HTTP版本</h2><p><img src="http://static.zybuluo.com/shensky711/tw26ay8qwfmd6q0gxlthjmpo/image_1aukpb88b17f119i1oatsdi1pti4b.png" alt="image_1aukpb88b17f119i1oatsdi1pti4b.png-58.3kB"></p>
+<h2 id="设置Response-头部"><a href="#设置Response-头部" class="headerlink" title="设置Response 头部"></a>设置Response 头部</h2><p><img src="http://static.zybuluo.com/shensky711/1wz38ibvqmu8ucp5ss1c9o6i/image_1aukpboqh15l6ib31gvrcjo1dbq4o.png" alt="image_1aukpboqh15l6ib31gvrcjo1dbq4o.png-45.9kB"></p>
+<h2 id="设置重定向"><a href="#设置重定向" class="headerlink" title="设置重定向"></a>设置重定向</h2><p><img src="http://static.zybuluo.com/shensky711/50qkgojcvjzw42ou8cwf4pjx/image_1aukpca591qrht381uv31cvt43g55.png" alt="image_1aukpca591qrht381uv31cvt43g55.png-39.9kB"></p>
+<h2 id="设置cookie"><a href="#设置cookie" class="headerlink" title="设置cookie"></a>设置cookie</h2><p><img src="http://static.zybuluo.com/shensky711/lf6kxs6caal95ob5nsuvn2hs/image_1aukpcqun1tq911n314fv1o8r12hi5i.png" alt="image_1aukpcqun1tq911n314fv1o8r12hi5i.png-42.1kB"></p>
+<h2 id="挂载文件"><a href="#挂载文件" class="headerlink" title="挂载文件"></a>挂载文件</h2><p><img src="http://static.zybuluo.com/shensky711/5ax8j2inbou4mu0tkgsgdfhf/image_1aukpdacf1sq3p241s14qbqdnb5v.png" alt="image_1aukpdacf1sq3p241s14qbqdnb5v.png-34.4kB"></p>
+<h1 id="template的用法"><a href="#template的用法" class="headerlink" title="template的用法"></a>template的用法</h1><p>Moco内置了一些变量，在response中可以使用这些变量，让反馈更智能，以下列举了常用的变量</p>
+<ul>
+<li>req.version</li>
+<li>req.version</li>
+<li>req.method</li>
+<li>req.content</li>
+<li>req.headers</li>
+<li>req.queries</li>
+<li>req.forms</li>
+<li>req.cookies</li>
+</ul>
+<p>使用举例如下：<br><img src="http://static.zybuluo.com/shensky711/j8kh8i7yz19kd7lh4779xwor/image_1aukpfh4037cdgjsdoevg10396c.png" alt="image_1aukpfh4037cdgjsdoevg10396c.png-114.1kB"></p>
+<h1 id="Moco在单元测试中使用"><a href="#Moco在单元测试中使用" class="headerlink" title="Moco在单元测试中使用"></a>Moco在单元测试中使用</h1><p>Moco除了可以单独运行外，还可以在单元测试中运行，测试过程中，Moco会启动一个web server来处理我们的请求</p>
+<p> <img src="http://static.zybuluo.com/shensky711/butmpkdh2k8zh86nh0o10nv5/image_1aukpgl0jlqs7fn10ha1e5n1kmu6p.png" alt="image_1aukpgl0jlqs7fn10ha1e5n1kmu6p.png-156.2kB"></p>
+<p>运行在单元测试中的moco server也可以选择加载json配置文件<br><img src="http://static.zybuluo.com/shensky711/2z4kqm8upxuml8jv61z5794n/image_1aukph7s4vpdjegi1fkp1jfn76.png" alt="image_1aukph7s4vpdjegi1fkp1jfn76.png-169.7kB"></p>
+<p>通过stub后台，便可对http请求进行测试了</p>
+<h1 id="Moco的不足"><a href="#Moco的不足" class="headerlink" title="Moco的不足"></a>Moco的不足</h1><p>Moco的使用很简单，配置也很方便，目前更是提供了http、rest、socket服务。但是也仅仅是能stub出接口，模拟出简单的场景。如果接收到请求后需要做一些处理，如需查询数据库、进行运算、或者一些复杂的操作，就无能为力了。所以是否选用Moco，就取决于开发者是否只是需要一个简单的模拟服务器。</p>
+
+    </div>
+
+    
+    
+    
+      <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center;">
+  <img id="wechat_subscriber_qcode" src="/images/wechat-qcode.png" alt="chenhang wechat" style="width: 200px; max-width: 100%;">
+  <div></div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Moco/" rel="tag"># Moco</a>
+              <a href="/tags/mock/" rel="tag"># mock</a>
+              <a href="/tags/server/" rel="tag"># server</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2016/06/21/mockito/" rel="next" title="Mockito使用指南 - 单元测试的正确姿势">
+      Mockito使用指南 - 单元测试的正确姿势 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Moco介绍"><span class="nav-text">Moco介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Moco独立运行所需环境"><span class="nav-text">Moco独立运行所需环境</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何运行Moco"><span class="nav-text">如何运行Moco</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#启动http服务"><span class="nav-text">启动http服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#启动https服务"><span class="nav-text">启动https服务</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Moco-HTTP-s-API配置"><span class="nav-text">Moco HTTP(s) API配置</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#如何在配置文件添加注释"><span class="nav-text">如何在配置文件添加注释</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#约定请求Body"><span class="nav-text">约定请求Body</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#约定接口的uri"><span class="nav-text">约定接口的uri</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#约定请求参数"><span class="nav-text">约定请求参数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#约定请求方法"><span class="nav-text">约定请求方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#约定HTTP版本"><span class="nav-text">约定HTTP版本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#约定请求头部"><span class="nav-text">约定请求头部</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#约定cookie"><span class="nav-text">约定cookie</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#约定请求form"><span class="nav-text">约定请求form</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#约定以指定xml作为请求body"><span class="nav-text">约定以指定xml作为请求body</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#用xpath对请求进行匹配"><span class="nav-text">用xpath对请求进行匹配</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#约定以指定json作为请求body"><span class="nav-text">约定以指定json作为请求body</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#用正则表达式对请求进行匹配"><span class="nav-text">用正则表达式对请求进行匹配</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#匹配操作"><span class="nav-text">匹配操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设置Response-content"><span class="nav-text">设置Response content</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设置Response-状态码"><span class="nav-text">设置Response 状态码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设置Response-HTTP版本"><span class="nav-text">设置Response HTTP版本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设置Response-头部"><span class="nav-text">设置Response 头部</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设置重定向"><span class="nav-text">设置重定向</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设置cookie"><span class="nav-text">设置cookie</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#挂载文件"><span class="nav-text">挂载文件</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#template的用法"><span class="nav-text">template的用法</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Moco在单元测试中使用"><span class="nav-text">Moco在单元测试中使用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Moco的不足"><span class="nav-text">Moco的不足</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="chenhang"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">chenhang</p>
+  <div class="site-description" itemprop="description">博观而约取，厚积而薄发。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">61</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/shensky711" title="GitHub → https://github.com/shensky711" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/shensky711" title="CSDN → https://blog.csdn.net/shensky711" rel="noopener" target="_blank"><i class="fa fa-fw fa-archive"></i>CSDN</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:shensky711@gmail.com" title="E-Mail → mailto:shensky711@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">chenhang</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">284k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">4:18</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'ST1hmgzJfF6c44BNUyK56qad-gzGzoHsz',
+      appKey     : 'Wy4dwHBHU556tTDardpzBI3i',
+      placeholder: "说点什么吧~",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

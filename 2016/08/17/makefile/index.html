@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="bMH0URCoOdzdhSMyGeDuGebWiSxHnJsOLundsaPEZbc">
+  <meta name="msvalidate.01" content="EC8F55291A196E9DD39DDDB134E93A69">
+  <meta name="baidu-site-verification" content="QC6bRBu8qm">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.hanschen.site","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="什么是MakefileMakefile定义了一系列的规则来指定，哪些文件需要先编译，哪些文件需要后编译，哪些文件需要重新编译，文件之间有哪些依赖等。Makefile有自己的书写格式、关键字、函数。像C 语言有自己的格式、关键字和函数一样。而且在Makefile中可以使用系统shell所提供的任何命令来完成想要的工作。Makefile带来的好处就是——“自动化编译”，一旦写好，只需要一个make命令">
+<meta name="keywords" content="c,makefile教程,makefile">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Makefile使用指南">
+<meta property="og:url" content="http://blog.hanschen.site/2016/08/17/makefile/index.html">
+<meta property="og:site_name" content="HansChen 的博客">
+<meta property="og:description" content="什么是MakefileMakefile定义了一系列的规则来指定，哪些文件需要先编译，哪些文件需要后编译，哪些文件需要重新编译，文件之间有哪些依赖等。Makefile有自己的书写格式、关键字、函数。像C 语言有自己的格式、关键字和函数一样。而且在Makefile中可以使用系统shell所提供的任何命令来完成想要的工作。Makefile带来的好处就是——“自动化编译”，一旦写好，只需要一个make命令">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2021-10-21T01:42:39.219Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Makefile使用指南">
+<meta name="twitter:description" content="什么是MakefileMakefile定义了一系列的规则来指定，哪些文件需要先编译，哪些文件需要后编译，哪些文件需要重新编译，文件之间有哪些依赖等。Makefile有自己的书写格式、关键字、函数。像C 语言有自己的格式、关键字和函数一样。而且在Makefile中可以使用系统shell所提供的任何命令来完成想要的工作。Makefile带来的好处就是——“自动化编译”，一旦写好，只需要一个make命令">
+
+<link rel="canonical" href="http://blog.hanschen.site/2016/08/17/makefile/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Makefile使用指南 | HansChen 的博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?cae9425eed9e207f553597421f71ddad";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">HansChen 的博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类<span class="badge">8</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签<span class="badge">61</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">31</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/shensky711" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.hanschen.site/2016/08/17/makefile/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="chenhang">
+      <meta itemprop="description" content="博观而约取，厚积而薄发。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HansChen 的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Makefile使用指南
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2016-08-17 00:00:00" itemprop="dateCreated datePublished" datetime="2016-08-17T00:00:00+08:00">2016-08-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-10-21 09:42:39" itemprop="dateModified" datetime="2021-10-21T09:42:39+08:00">2021-10-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/杂七杂八/" itemprop="url" rel="index"><span itemprop="name">杂七杂八</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2016/08/17/makefile/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2016/08/17/makefile/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="什么是Makefile"><a href="#什么是Makefile" class="headerlink" title="什么是Makefile"></a>什么是Makefile</h1><p>Makefile定义了一系列的规则来指定，哪些文件需要先编译，哪些文件需要后编译，哪些文件需要重新编译，文件之间有哪些依赖等。Makefile有自己的书写格式、关键字、函数。像C 语言有自己的格式、关键字和函数一样。而且在Makefile中可以使用系统shell所提供的任何命令来完成想要的工作。<br>Makefile带来的好处就是——“自动化编译”，一旦写好，只需要一个make命令，整个工程完全自动编译，极大的提高了软件开发的效率</p>
+<h1 id="makefile的文件名"><a href="#makefile的文件名" class="headerlink" title="makefile的文件名"></a>makefile的文件名</h1><p>默认的情况下，make命令会在当前目录下按顺序找寻文件名为“GNUmakefile”、“makefile”、“Makefile”的文件，找到了解释这个文件。在这三个文件名中，最好不要用“GNUmakefile”，这个文件是GNU的make识别的。有另外一些make只对全小写的“makefile”文件名敏感，但是基本上来说，大多数的make都支持“makefile”和“Makefile”这两种默认文件名。</p>
+<p>当然，你可以使用别的文件名来书写Makefile，比如：“Make.Linux”，“Make.Solaris”，“Make.AIX”等，如果要指定特定的Makefile，你可以使用make的“-f”和“–file”参数，如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">make -f Make.Linux</span><br><span class="line">make --file Make.AIX</span><br></pre></td></tr></table></figure>
+
+<a id="more"></a>
+
+<h1 id="Makefile的规则"><a href="#Makefile的规则" class="headerlink" title="Makefile的规则"></a>Makefile的规则</h1><h2 id="显示规则"><a href="#显示规则" class="headerlink" title="显示规则"></a>显示规则</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">target ... : prerequisites ...</span><br><span class="line">    command</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>target：要生成的目标，也可以是一个标签</li>
+<li>prerequisites：目标所依赖的列表</li>
+<li>command：任意shell指令，一般用于生成target。<strong>必须以[Tab键]开头</strong>，也可以和prerequisites在一行，用分号做为分隔</li>
+</ul>
+<p>这是一个文件的依赖关系，也就是说，target依赖于prerequisites中的文件，其生成规则定义在command中。说白一点就是说，prerequisites中如果有一个以上的文件比target文件要新的话，command所定义的命令就会被执行(command一定要以Tab键开始，否则编译器无法识别command）。这就是Makefile的规则，也是Makefile中最核心的内容。</p>
+<p>举个栗子：</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">test : test1.o test2.o</span><br><span class="line">	cc -o test test1.o test2.o</span><br><span class="line">	</span><br><span class="line">test1.o : test1.c test1.h</span><br><span class="line">	cc -c test1.c</span><br><span class="line">	</span><br><span class="line">test2.o : test2.c test2.h</span><br><span class="line">	cc -c test2.c</span><br><span class="line">	</span><br><span class="line">clean :</span><br><span class="line">	rm test test1.o test2.o</span><br></pre></td></tr></table></figure>
+
+<p>在这里，test是最终的目标，生成test，依赖于test1.o和test2.o也就是说，有以下情况发生时，会执行cc -o test test1.o test2.o指令，以重新生成target</p>
+<ul>
+<li>test不存在</li>
+<li>test存在，但test1.o的修改时间比test新</li>
+<li>test存在，但test2.o的修改时间比test新</li>
+</ul>
+<p>把所有依赖关系都在makefile里列举出来之后，执行make命令的时候，就会根据依赖关系自动编译链接了  </p>
+<p>但是这里的clean又是干什么的呢？它并没有其他依赖，那么，make就不会自动去找文件的依赖性，也就不会自动执行其后所定义的命令。要执行其后的命令，就要在make命令后明显得指出这个lable的名字，比如<code>make clean</code>。这样的方法非常有用，我们可以在一个makefile中定义不用的编译或是和编译无关的命令，比如程序的打包，程序的备份，等等。</p>
+<h2 id="隐晦规则"><a href="#隐晦规则" class="headerlink" title="隐晦规则"></a>隐晦规则</h2><p>每个.o文件的依赖文件默认会有同名的.c文件，比如有一个target是test.o，那么test.c默认就是test.O的依赖文件，这个是makefile的隐晦规则，是make会自动推导出来的</p>
+<h1 id="make是怎么工作的？"><a href="#make是怎么工作的？" class="headerlink" title="make是怎么工作的？"></a>make是怎么工作的？</h1><p>在默认的方式下，也就是我们只输入make命令。那么：</p>
+<ol>
+<li>make会在当前目录下找名字叫“Makefile”或“makefile”的文件</li>
+<li>如果找到，它会找文件中的<strong>第一个</strong>目标文件（target），在上面的例子中，他会找到“test”这个文件，并把这个文件作为最终的目标文件</li>
+<li>如果test文件不存在，或是test所依赖的后面的 .o 文件的文件修改时间要比test这个文件新，那么，他就会执行后面所定义的命令来生成test这个文件</li>
+<li>如果test所依赖的.o文件也不存在，那么make会在当前文件中找目标为.o文件的依赖性，如果找到则再根据那一个规则生成.o文件</li>
+</ol>
+<p>这就是整个make的依赖性，make会一层又一层地去找文件的依赖关系，直到最终编译出第一个目标文件</p>
+<h1 id="makefile中使用变量"><a href="#makefile中使用变量" class="headerlink" title="makefile中使用变量"></a>makefile中使用变量</h1><h2 id="变量的基础"><a href="#变量的基础" class="headerlink" title="变量的基础"></a>变量的基础</h2><p>为了makefile的易维护，在makefile中我们可以使用变量。makefile的变量也就是一个字符串，比如我们可以定义一个objects变量，并通过$(objects)的方式来使用这个变量。变量类似与C语言的宏定义，在执行的时候，变量的值会被扩展到被使用的地方</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">objects = test1.o test2.o	</span><br><span class="line">test : <span class="variable">$(objects)</span></span><br><span class="line">	cc -o test <span class="variable">$(objects)</span></span><br><span class="line"><span class="comment"># --------------------------------------</span></span><br><span class="line">test : test1.o test2.o</span><br><span class="line">	cc -o test test1.o test2.o</span><br></pre></td></tr></table></figure>
+
+<p>第一种写法和第二种写法的作用完全是一样的</p>
+<h2 id="变量中的变量"><a href="#变量中的变量" class="headerlink" title="变量中的变量"></a>变量中的变量</h2><p>在定义变量的值时，我们可以使用其它变量来构造变量的值，在Makefile中有两种方式来在用变量定义变量的值。</p>
+<p>先看第一种方式，也就是简单的使用“=”号，在“=”左侧是变量，右侧是变量的值，右侧变量的值可以定义在文件的任何一处，也就是说，右侧中的变量不一定非要是已定义好的值，其也可以使用后面定义的值。如：</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">foo = <span class="variable">$(bar)</span></span><br><span class="line">bar = <span class="variable">$(ugh)</span></span><br><span class="line">ugh = Huh?</span><br><span class="line"></span><br><span class="line"><span class="section">all:</span></span><br><span class="line">    echo <span class="variable">$(foo)</span> <span class="comment">#我们执行“make all”将会打出变量$(foo)的值是“Huh?”</span></span><br></pre></td></tr></table></figure>
+
+<p>这个功能有好的地方，也有不好的地方，好的地方是，我们可以把变量的真实值推到后面来定义，不好的地方，那就是递归定义：</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">A = <span class="variable">$(B)</span></span><br><span class="line">B = <span class="variable">$(A)</span></span><br><span class="line"><span class="comment">#这会让make陷入无限的变量展开过程中去,当然，我们的make是有能力检测这样的定义，并会报错</span></span><br></pre></td></tr></table></figure>
+
+<p>为了避免上面的这种方法，我们可以使用make中的另一种用变量来定义变量的方法。这种方法使用的是“:=”操作符:</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">x := foo</span><br><span class="line">y := <span class="variable">$(x)</span> bar</span><br><span class="line">x := later</span><br><span class="line"></span><br><span class="line"><span class="comment">#这种方法，前面的变量不能使用后面的变量，只能使用前面已定义好了的变量,上下两种方式是等价的</span></span><br><span class="line"></span><br><span class="line">y := foo bar</span><br><span class="line">x := later</span><br></pre></td></tr></table></figure>
+
+<h2 id="追加变量值"><a href="#追加变量值" class="headerlink" title="追加变量值"></a>追加变量值</h2><p>我们可以使用“+=”操作符给变量追加值，如：</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">objects = main.o foo.o bar.o utils.o</span><br><span class="line">objects += another.o</span><br></pre></td></tr></table></figure>
+
+<p>于是，我们的$(objects)值变成：“main.o foo.o bar.o utils.o another.o”（another.o被追加进去了）</p>
+<p>如果变量之前没有定义过，那么，“+=”会自动变成“=”，如果前面有变量定义，那么“+=”会继承于前次操作的赋值符。如果前一次的是“:=”，那么“+=”会以“:=”作为其赋值符，如：</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">variable := value</span><br><span class="line">variable += more</span><br></pre></td></tr></table></figure>
+
+<p>等价于：</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">variable := value</span><br><span class="line">variable := <span class="variable">$(variable)</span> more</span><br></pre></td></tr></table></figure>
+
+<p>但如果是这种情况： </p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">variable = value</span><br><span class="line">variable += more</span><br></pre></td></tr></table></figure>
+
+<p>由于前次的赋值符是“=”，所以“+=”也会以“=”来做为赋值，那么岂不会发生变量的递补归定义，这是很不好的，所以make会自动为我们解决这个问题，我们不必担心这个问题。</p>
+<h2 id="变量的高级用法"><a href="#变量的高级用法" class="headerlink" title="变量的高级用法"></a>变量的高级用法</h2><h3 id="变量值的替换"><a href="#变量值的替换" class="headerlink" title="变量值的替换"></a>变量值的替换</h3><p>我们可以替换变量中的共有的部分，其格式是“$(var:a=b)”或是“${var:a=b}”，其意思是，把变量“var”中所有以“a”字串“结尾”的“a”替换成“b”字串。这里的“结尾”意思是“空格”或是“结束符还是看一个示例吧：</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">foo := a.o b.o c.o</span><br><span class="line">bar := $(foo:.o=.c)</span><br><span class="line"><span class="comment"># 把“$(foo)”中所有以“.o”字串“结尾”全部替换成“.c”，最终bar的值是a.c b.c c.c</span></span><br></pre></td></tr></table></figure>
+
+<p>另外一种变量替换的技术是以“静态模式”（参见前面章节）定义的，如：</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">foo := a.o b.o c.o</span><br><span class="line">bar := $(foo:%.o=%.c)</span><br><span class="line"><span class="comment"># 这依赖于被替换字串中的有相同的模式，模式中必须包含一个“%”字符，这个例子同样让$(bar)变量的值为“a.c b.c c.c”</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="把变量的值再当成变量"><a href="#把变量的值再当成变量" class="headerlink" title="把变量的值再当成变量"></a>把变量的值再当成变量</h3><figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">x = y</span><br><span class="line">y = z</span><br><span class="line">a := $(<span class="variable">$(x)</span>)</span><br><span class="line"><span class="comment"># 在这个例子中，$(x)的值是“y”，所以$($(x))就是$(y)，于是$(a)的值就是“z”</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="让make自动推导"><a href="#让make自动推导" class="headerlink" title="让make自动推导"></a>让make自动推导</h1><p>GNU的make很强大，它可以自动推导文件以及文件依赖关系后面的命令。</p>
+<p>只要make看到一个[.o]文件，它就会自动的把[.c]文件加在依赖关系中，如果make找到一个whatever.o，那么whatever.c，就会是whatever.o的依赖文件。并且 cc -c whatever.c 也会被推导出来，于是，我们的makefile再也不用写得这么复杂</p>
+<h1 id="清空目标文件的规则"><a href="#清空目标文件的规则" class="headerlink" title="清空目标文件的规则"></a>清空目标文件的规则</h1><p>每个Makefile中都应该写一个清空目标文件（.o和执行文件）的规则，这不仅便于重编译，也很利于保持文件的清洁，一般风格是：</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">.PHONY : clean</span><br><span class="line">clean :</span><br><span class="line">    rm test <span class="variable">$(objects)</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="makefile注释"><a href="#makefile注释" class="headerlink" title="makefile注释"></a>makefile注释</h1><p>Makefile中只有行注释，和UNIX的Shell脚本一样，其注释是用“#”字符，如：</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 这是在makefile中的注释1</span></span><br><span class="line"><span class="comment"># 这是在makefile中的注释2</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="引用其它的Makefile"><a href="#引用其它的Makefile" class="headerlink" title="引用其它的Makefile"></a>引用其它的Makefile</h1><p>在Makefile使用include关键字可以把别的Makefile包含进来，make命令开始时，会把找寻include所指出的其它Makefile，并把其内容安置在当前的位置。这很像C语言的#include，被包含的文件会原模原样的放在当前文件的包含位置。include的语法是：</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">include</span> &lt;filename&gt;</span><br><span class="line"><span class="comment"># 在include前面可以有一些空字符，但是绝不能是[Tab]键开始</span></span><br><span class="line"><span class="comment"># filename可以是当前操作系统Shell的文件模式（可以保含路径和通配符）</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">-include</span> &lt;filename&gt;</span><br><span class="line"><span class="comment"># 无论include过程中出现什么错误，都不要报错继续执行。上面那条指令若是找不到include的目标文件，会报错</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="伪目标"><a href="#伪目标" class="headerlink" title="伪目标"></a>伪目标</h1><p>最早先的一个例子中，我们提到过一个“clean”的目标。</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">clean:</span></span><br><span class="line">    rm *.o temp</span><br></pre></td></tr></table></figure>
+
+<p>伪目标不会自动被执行，只能显式地调用执行。但是上面伪目标的写法有一个缺陷，若是当前目录下存在有一个文件名为”clean”，那么根据我们的规则，command将不会被执行，因为目标已经存在了，为了解决这个问题，我们可以使用一个特殊的标记“.PHONY”来显示地指明一个目标是“伪目标”，向make说明，不管是否有这个文件，这个目标就是“伪目标”</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">.PHONY : clean</span><br><span class="line"><span class="section">clean:</span></span><br><span class="line">    rm *.o temp</span><br></pre></td></tr></table></figure>
+
+<p>通过.PHONY，无论是否存在“clean”文件，我们的command都将会被执行了</p>
+<h1 id="命令出错"><a href="#命令出错" class="headerlink" title="命令出错"></a>命令出错</h1><p>每当命令运行完后，make会检测每个命令的返回码，如果命令返回成功，那么make会执行下一条命令，当规则中所有的命令成功返回后，这个规则就算是成功完成了。如果一个规则中的某个命令出错了（命令退出码非零），那么make就会终止执行当前规则，这将有可能终止所有规则的执行。</p>
+<p>有些时候，命令的出错并不表示就是错误的。例如mkdir命令，我们一定需要建立一个目录，如果目录不存在，那么mkdir就成功执行，万事大吉，如果目录存在，那么就出错了。我们之所以使用mkdir的意思就是一定要有这样的一个目录，于是我们就不希望mkdir出错而终止规则的运行。</p>
+<p>为了做到这一点，忽略命令的出错，我们可以在Makefile的命令行前加一个减号“-”（在Tab键之后），标记为不管命令出不出错都认为是成功的。如：</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">clean:</span></span><br><span class="line">    -rm -f *.o</span><br></pre></td></tr></table></figure>
+
+
+
+    </div>
+
+    
+    
+    
+      <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center;">
+  <img id="wechat_subscriber_qcode" src="/images/wechat-qcode.png" alt="chenhang wechat" style="width: 200px; max-width: 100%;">
+  <div></div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/c/" rel="tag"># c</a>
+              <a href="/tags/makefile教程/" rel="tag"># makefile教程</a>
+              <a href="/tags/makefile/" rel="tag"># makefile</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2016/08/16/keytool-openssl-ca/" rel="prev" title="利用keytool、openssl生成证书文件">
+      <i class="fa fa-chevron-left"></i> 利用keytool、openssl生成证书文件
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2016/08/26/Android-64k-issue/" rel="next" title="Android最大方法数和解决方案">
+      Android最大方法数和解决方案 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#什么是Makefile"><span class="nav-text">什么是Makefile</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#makefile的文件名"><span class="nav-text">makefile的文件名</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Makefile的规则"><span class="nav-text">Makefile的规则</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#显示规则"><span class="nav-text">显示规则</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#隐晦规则"><span class="nav-text">隐晦规则</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#make是怎么工作的？"><span class="nav-text">make是怎么工作的？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#makefile中使用变量"><span class="nav-text">makefile中使用变量</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#变量的基础"><span class="nav-text">变量的基础</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#变量中的变量"><span class="nav-text">变量中的变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#追加变量值"><span class="nav-text">追加变量值</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#变量的高级用法"><span class="nav-text">变量的高级用法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#变量值的替换"><span class="nav-text">变量值的替换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#把变量的值再当成变量"><span class="nav-text">把变量的值再当成变量</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#让make自动推导"><span class="nav-text">让make自动推导</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#清空目标文件的规则"><span class="nav-text">清空目标文件的规则</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#makefile注释"><span class="nav-text">makefile注释</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#引用其它的Makefile"><span class="nav-text">引用其它的Makefile</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#伪目标"><span class="nav-text">伪目标</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#命令出错"><span class="nav-text">命令出错</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="chenhang"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">chenhang</p>
+  <div class="site-description" itemprop="description">博观而约取，厚积而薄发。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">61</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/shensky711" title="GitHub → https://github.com/shensky711" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/shensky711" title="CSDN → https://blog.csdn.net/shensky711" rel="noopener" target="_blank"><i class="fa fa-fw fa-archive"></i>CSDN</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:shensky711@gmail.com" title="E-Mail → mailto:shensky711@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">chenhang</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">284k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">4:18</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'ST1hmgzJfF6c44BNUyK56qad-gzGzoHsz',
+      appKey     : 'Wy4dwHBHU556tTDardpzBI3i',
+      placeholder: "说点什么吧~",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

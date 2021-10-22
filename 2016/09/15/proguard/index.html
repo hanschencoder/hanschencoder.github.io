@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="bMH0URCoOdzdhSMyGeDuGebWiSxHnJsOLundsaPEZbc">
+  <meta name="msvalidate.01" content="EC8F55291A196E9DD39DDDB134E93A69">
+  <meta name="baidu-site-verification" content="QC6bRBu8qm">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.hanschen.site","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="ProGuard简介和工作流程ProGuard能够通过压缩、优化、混淆、预检等操作，检测并删除未使用的类,字段,方法和属性，分析和优化字节码，使用简短无意义的名称来重命名类，字段和方法。从而使代码更小、更高效、更难进行逆向工程。 上图就是ProGuard的工作流程，分别会经过四个阶段：  压缩（Shrink）:在压缩处理这一步中，用于检测和删除没有使用的类，字段，方法和属性 优化（Optimize">
+<meta name="keywords" content="java代码混淆,PrgGuard,Android混淆">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ProGuard代码混淆详细攻略">
+<meta property="og:url" content="http://blog.hanschen.site/2016/09/15/proguard/index.html">
+<meta property="og:site_name" content="HansChen 的博客">
+<meta property="og:description" content="ProGuard简介和工作流程ProGuard能够通过压缩、优化、混淆、预检等操作，检测并删除未使用的类,字段,方法和属性，分析和优化字节码，使用简短无意义的名称来重命名类，字段和方法。从而使代码更小、更高效、更难进行逆向工程。 上图就是ProGuard的工作流程，分别会经过四个阶段：  压缩（Shrink）:在压缩处理这一步中，用于检测和删除没有使用的类，字段，方法和属性 优化（Optimize">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-10-59-30.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-11-0-18.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-11-1-37.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-11-1-52.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-11-2-15.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-11-2-50.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-11-6-36.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-11-7-54.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-11-8-32.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-11-8-47.png">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-9-2-11-9-17.png">
+<meta property="og:updated_time" content="2021-10-21T01:42:39.219Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ProGuard代码混淆详细攻略">
+<meta name="twitter:description" content="ProGuard简介和工作流程ProGuard能够通过压缩、优化、混淆、预检等操作，检测并删除未使用的类,字段,方法和属性，分析和优化字节码，使用简短无意义的名称来重命名类，字段和方法。从而使代码更小、更高效、更难进行逆向工程。 上图就是ProGuard的工作流程，分别会经过四个阶段：  压缩（Shrink）:在压缩处理这一步中，用于检测和删除没有使用的类，字段，方法和属性 优化（Optimize">
+<meta name="twitter:image" content="http://image.hanschen.site/master/2019-9-2-10-59-30.png">
+
+<link rel="canonical" href="http://blog.hanschen.site/2016/09/15/proguard/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>ProGuard代码混淆详细攻略 | HansChen 的博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?cae9425eed9e207f553597421f71ddad";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">HansChen 的博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类<span class="badge">8</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签<span class="badge">61</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">31</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/shensky711" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.hanschen.site/2016/09/15/proguard/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="chenhang">
+      <meta itemprop="description" content="博观而约取，厚积而薄发。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HansChen 的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          ProGuard代码混淆详细攻略
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2016-09-15 00:00:00" itemprop="dateCreated datePublished" datetime="2016-09-15T00:00:00+08:00">2016-09-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-10-21 09:42:39" itemprop="dateModified" datetime="2021-10-21T09:42:39+08:00">2021-10-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2016/09/15/proguard/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2016/09/15/proguard/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>9.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>9 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="ProGuard简介和工作流程"><a href="#ProGuard简介和工作流程" class="headerlink" title="ProGuard简介和工作流程"></a>ProGuard简介和工作流程</h1><p>ProGuard能够通过压缩、优化、混淆、预检等操作，检测并删除未使用的类,字段,方法和属性，分析和优化字节码，使用简短无意义的名称来重命名类，字段和方法。从而使代码更小、更高效、更难进行逆向工程。<br><img src="http://image.hanschen.site/master/2019-9-2-10-59-30.png" alt="2019-9-2-10-59-30.png"></p>
+<p>上图就是ProGuard的工作流程，分别会经过四个阶段：</p>
+<ol>
+<li><code>压缩（Shrink）</code>:在压缩处理这一步中，用于检测和删除没有使用的类，字段，方法和属性</li>
+<li><code>优化（Optimize）</code>:在优化处理这一步中，对字节码进行优化，并且移除无用指令</li>
+<li><code>混淆（Obfuscate）</code>:在混淆处理这一步中，使用a,b,c等无意义的名称，对类，字段和方法进行重命名</li>
+<li><code>预检（Preveirfy）</code>:在预检这一步中，主要是在Java平台上对处理后的代码进行预检</li>
+</ol>
+<p>以上四个步骤都是<strong>可选</strong>的，我们可以通过配置脚本来决定其中的哪几个步骤。比如我们可以配置只压缩和混淆，不进行优化，不进行预检。<br>ProGuard的官网有使用指导：<a href="http://proguard.sourceforge.net/" target="_blank" rel="noopener">http://proguard.sourceforge.net/</a></p>
+<p> </p>
+<a id="more"></a>
+
+<h1 id="PrgGuard环境配置和使用"><a href="#PrgGuard环境配置和使用" class="headerlink" title="PrgGuard环境配置和使用"></a>PrgGuard环境配置和使用</h1><h2 id="运行PrgGuard需要以下依赖："><a href="#运行PrgGuard需要以下依赖：" class="headerlink" title="运行PrgGuard需要以下依赖："></a>运行PrgGuard需要以下依赖：</h2><ul>
+<li>proguard.jar或者proguardgui.jar。proguardgui提供了一个简单的配置界面（如下图），可以在上面进行配置，而progua.jar则是使用配置文件进行处理</li>
+<li>Java运行环境</li>
+</ul>
+<p><img src="http://image.hanschen.site/master/2019-9-2-11-0-18.png" alt="2019-9-2-11-0-18.png"></p>
+<h2 id="如何运行ProGuard"><a href="#如何运行ProGuard" class="headerlink" title="如何运行ProGuard"></a>如何运行ProGuard</h2><p>ProGuard可以通过命令行调用，如：</p>
+<ul>
+<li>java -jar proguardgui.jar：启动图形化配置界面</li>
+<li>java -jar proguard.jar @config.file –options …：通过配置文件进行ProGuard处理</li>
+</ul>
+<p><img src="http://image.hanschen.site/master/2019-9-2-11-1-37.png" alt="2019-9-2-11-1-37.png"></p>
+<p>执行成功后，用jd-gui打开处理后的jar文件：</p>
+<p><img src="http://image.hanschen.site/master/2019-9-2-11-1-52.png" alt="2019-9-2-11-1-52.png"></p>
+<p>可以发现，类已经被混淆处理了。</p>
+<h1 id="PrgGuard配置文件使用"><a href="#PrgGuard配置文件使用" class="headerlink" title="PrgGuard配置文件使用"></a>PrgGuard配置文件使用</h1><h2 id="Entry-points的概念"><a href="#Entry-points的概念" class="headerlink" title="Entry points的概念"></a>Entry points的概念</h2><p>这里，我们引入Entry points的概念。Entry points是在ProGuard过程中不会处理的类或者方法。<br>在Shrink的步骤中，ProGuard会递归遍历，搜索使用了哪些类和成员，对于没有使用的类和类成员，就会在压缩阶段丢弃。<br>接下来在Optimize阶段，那些非Entry points的类、方法都会被设置为private、static或者final，没有使用的参数会被移除，此外，有些方法会被标记为内联。<br>在Obfuscate的步骤中，ProGuard会对非Entry points的类和方法进行重命名。</p>
+<h2 id="会用到的指令参数说明"><a href="#会用到的指令参数说明" class="headerlink" title="会用到的指令参数说明"></a>会用到的指令参数说明</h2><h3 id="Modifier"><a href="#Modifier" class="headerlink" title="Modifier"></a>Modifier</h3><ul>
+<li><code>Includedescriptorclasses</code>：一般用于保证native方法名，确保方法的参数类型不会重命名，确保方法签名不会被改变，这样才能跟native libraries相匹配。</li>
+<li><code>Allowshrinking</code>：允许压缩</li>
+<li><code>Allowoptimization</code>：允许优化</li>
+<li><code>Allowobfuscation</code>：允许混淆名称</li>
+</ul>
+<h3 id="Class-Specifications"><a href="#Class-Specifications" class="headerlink" title="Class Specifications"></a>Class Specifications</h3><p>Class Specifications是用来描述类和方法的模板，下面是这个模板的格式：</p>
+<p><img src="http://image.hanschen.site/master/2019-9-2-11-2-15.png" alt="2019-9-2-11-2-15.png"></p>
+<p>其中，[]中的内容是可选，名称可以使用通配符，<init>匹配构造函数、<fields>匹配成员、<methods>匹配方法，详细请参考：<a href="http://proguard.sourceforge.net/manual/usage.html#keepoptionmodifiers" target="_blank" rel="noopener">http://proguard.sourceforge.net/manual/usage.html#keepoptionmodifiers</a></methods></fields></init></p>
+<h2 id="基本指令"><a href="#基本指令" class="headerlink" title="基本指令"></a>基本指令</h2><h3 id="basedirectory-directoryname："><a href="#basedirectory-directoryname：" class="headerlink" title="-basedirectory directoryname："></a>-basedirectory directoryname：</h3><p>在配置文件中出现的相对路径均是相对于该路径，如图：<br><img src="http://image.hanschen.site/master/2019-9-2-11-2-50.png" alt="2019-9-2-11-2-50.png"></p>
+<h3 id="injars-class-path"><a href="#injars-class-path" class="headerlink" title="-injars class_path"></a>-injars class_path</h3><p>指定处理的jar包（或者aars, wars, ears, zips, apks, directories）等，这个jar包里面的类将会被ProGuard处理并写入到输出的jar包里去。一般非class文件会不做任何处理直接直接复制到输出文件中，injars可以多次使用，引入不同的需要处理的文件。<br>注意，该选项可以指定一个目录，那么该目录下所有文件都会被当作input file处理。</p>
+<h3 id="outjars-class-path"><a href="#outjars-class-path" class="headerlink" title="-outjars class_path"></a>-outjars class_path</h3><p>设置处理完成后的输出文件路径</p>
+<h3 id="libraryjars-class-path"><a href="#libraryjars-class-path" class="headerlink" title="-libraryjars class_path"></a>-libraryjars class_path</h3><p>指定要处理应用程序的jar(或者aars, wars, ears, zips, apks, directories)，这些文件不会包含到输出文件中。一般是指被处理文件所依赖的一些jar包，而那些jar包是不需要被处理以及写入到输出文件的。比如：<br><img src="http://image.hanschen.site/master/2019-9-2-11-6-36.png" alt="2019-9-2-11-6-36.png"></p>
+<h3 id="skipnonpubliclibraryclasses"><a href="#skipnonpubliclibraryclasses" class="headerlink" title="-skipnonpubliclibraryclasses"></a>-skipnonpubliclibraryclasses</h3><p>忽略library里面非public修饰的类。从而加快ProGuard的处理速度和降低ProGuard的使用内存。一般而言，library里的非公开类是不能被程序使用的，忽略掉这些类可以加快混淆速度。但是请注意，<strong>有一种特殊情况：有些人编写的代码与类库中的类在同一个包下，而且对该包的非public类进行了使用，在这种情况下，就不能使用该选项了</strong>。</p>
+<h3 id="–dontskipnonpubliclibraryclasses"><a href="#–dontskipnonpubliclibraryclasses" class="headerlink" title="–dontskipnonpubliclibraryclasses"></a>–dontskipnonpubliclibraryclasses</h3><p>不忽略library里面非public修饰的类</p>
+<h3 id="dontskipnonpubliclibraryclassmembers"><a href="#dontskipnonpubliclibraryclassmembers" class="headerlink" title="-dontskipnonpubliclibraryclassmembers"></a>-dontskipnonpubliclibraryclassmembers</h3><p>指定不忽略非public类里面的成员和方法。ProGuard默认会忽略类库里非public类里的成员和方法，但是由于一些3.2.5里面的一些原因，应用程序里可能会用到这些，这时候就需要这个选项来指定不忽略它们。</p>
+<h3 id="keepdirectories-directory-filter"><a href="#keepdirectories-directory-filter" class="headerlink" title="-keepdirectories [directory_filter]"></a>-keepdirectories [directory_filter]</h3><p>指定要保留在输出文件内的目录。默认情况下，目录会被移除。这会减少输出文件的大小，但如果你的代码引用到它们时可能会导致程序崩溃（如mypackage.MyCalss.class.getResource(“”)）。这时就需要指定-keepdirectories mypackage。-keepdirectories mydirectory匹配 mydirectory 目录；-keepdirectories mydirectory/<em>匹配 mydirectory 的直接子目录；-keepdirectorie mydirectory/*</em>匹配所有子目录，如果没有指定过滤器，所有目录会被保留。</p>
+<h3 id="target-version"><a href="#target-version" class="headerlink" title="-target version"></a>-target version</h3><p>指定被处理class文件所使用的java版本，可选的有: 1.0, 1.1, 1.2, 1.3, 1.4, 1.5 (or just 5), 1.6 (or just 6), 1.7 (or just 7), or 1.8 (or just 8).</p>
+<h3 id="forceprocessing"><a href="#forceprocessing" class="headerlink" title="-forceprocessing"></a>-forceprocessing</h3><p>强制输出，即使输出文件已经是最新状态</p>
+<h3 id="keep-modifier-…-class-specification"><a href="#keep-modifier-…-class-specification" class="headerlink" title="-keep [,modifier,…] class_specification"></a>-keep [,modifier,…] class_specification</h3><p>指定该类以及类的成员和方法为entry points，不被ProGuard混淆</p>
+<h3 id="keepclassmembers-modifier-…-class-specification"><a href="#keepclassmembers-modifier-…-class-specification" class="headerlink" title="-keepclassmembers [,modifier,…] class_specification"></a>-keepclassmembers [,modifier,…] class_specification</h3><p>指定类的某些成员不被混淆，注意类名还是会被混淆，如：<br><img src="http://image.hanschen.site/master/2019-9-2-11-7-54.png" alt="2019-9-2-11-7-54.png"></p>
+<h3 id="keepclasseswithmembers-modifier-…-class-specification"><a href="#keepclasseswithmembers-modifier-…-class-specification" class="headerlink" title="-keepclasseswithmembers [,modifier,…] class_specification"></a>-keepclasseswithmembers [,modifier,…] class_specification</h3><p>通过成员来指定哪些类不被混淆处理。比如可以用来保留包含main方法的类：<br><img src="http://image.hanschen.site/master/2019-9-2-11-8-32.png" alt="2019-9-2-11-8-32.png"></p>
+<p>如果指定了多条规则，如下，那么必须同时包含sayHello和test两个方法的类才会被保留<br><img src="http://image.hanschen.site/master/2019-9-2-11-8-47.png" alt="2019-9-2-11-8-47.png"></p>
+<h3 id="keepnames-class-specification"><a href="#keepnames-class-specification" class="headerlink" title="-keepnames class_specification"></a>-keepnames class_specification</h3><p>-keepclassmembers,allowshrinking class_specification的别名，保留名称不被混淆，但可以被压缩</p>
+<h3 id="keepclassmembernames-class-specification"><a href="#keepclassmembernames-class-specification" class="headerlink" title="-keepclassmembernames class_specification"></a>-keepclassmembernames class_specification</h3><p>-keepclasseswithmembers,allowshrinking class_specification的别名，保留名称不被混淆，但可以被压缩</p>
+<h3 id="keepclasseswithmembernames-class-specification"><a href="#keepclasseswithmembernames-class-specification" class="headerlink" title="-keepclasseswithmembernames class_specification"></a>-keepclasseswithmembernames class_specification</h3><p>-keepclasseswithmembers,allowshrinking class_specification的别名</p>
+<h3 id="printseeds-filename"><a href="#printseeds-filename" class="headerlink" title="-printseeds [filename]"></a>-printseeds [filename]</h3><p>把keep匹配的类和方法输出到文件中，可以用来验证自己设定的规则是否生效.</p>
+<h3 id="dontshrink"><a href="#dontshrink" class="headerlink" title="-dontshrink"></a>-dontshrink</h3><p>指定不进行压缩.</p>
+<h3 id="printusage-filename"><a href="#printusage-filename" class="headerlink" title="-printusage [filename]"></a>-printusage [filename]</h3><p>把没有使用的代码输出到文件中，方便查看哪些代码被压缩丢弃了。.</p>
+<h3 id="dontoptimize"><a href="#dontoptimize" class="headerlink" title="-dontoptimize"></a>-dontoptimize</h3><p>指定不对输入代码进行优化处理。优化选项是默认打开的。</p>
+<h3 id="optimizations"><a href="#optimizations" class="headerlink" title="-optimizations"></a>-optimizations</h3><p>指定混淆是采用的算法，后面的参数是一个过滤器，这个过滤器是谷歌推荐的算法，一般不做更改</p>
+<h3 id="optimizationpasses-n"><a href="#optimizationpasses-n" class="headerlink" title="-optimizationpasses n"></a>-optimizationpasses n</h3><p>指定优化的级别，在0-7之间，默认为5.</p>
+<h3 id="assumenosideeffects-class-specification"><a href="#assumenosideeffects-class-specification" class="headerlink" title="-assumenosideeffects class_specification"></a>-assumenosideeffects class_specification</h3><p>可以指定移除哪些方法没有副作用，如在android开发中，如想在release版本可以把所有log输出都移除，可以配置：</p>
+<p> <img src="http://image.hanschen.site/master/2019-9-2-11-9-17.png" alt="2019-9-2-11-9-17.png"></p>
+<p>那么所有log代码将会在优化阶段被去除。</p>
+<h3 id="–dontobfuscate"><a href="#–dontobfuscate" class="headerlink" title="–dontobfuscate"></a>–dontobfuscate</h3><p>指定不进行混淆</p>
+<h3 id="printmapping-filename"><a href="#printmapping-filename" class="headerlink" title="-printmapping [filename]"></a>-printmapping [filename]</h3><p>生成map文件，记录混淆前后的名称对应关系，注意，这个比较重要，因为混淆后运行的名称会变得不可读，只有依靠这个map文件来还原。</p>
+<h3 id="applymapping-filename"><a href="#applymapping-filename" class="headerlink" title="-applymapping filename"></a>-applymapping filename</h3><p>主要是用来维持两次混淆公用一份mapping，确保相同的代码前后两次混淆后是一样的命名</p>
+<h3 id="obfuscationdictionary-filename"><a href="#obfuscationdictionary-filename" class="headerlink" title="-obfuscationdictionary filename"></a>-obfuscationdictionary filename</h3><p>指定外部模糊字典</p>
+<h3 id="classobfuscationdictionary-filename"><a href="#classobfuscationdictionary-filename" class="headerlink" title="-classobfuscationdictionary filename"></a>-classobfuscationdictionary filename</h3><p>指定class模糊字典.</p>
+<h3 id="packageobfuscationdictionary-filename"><a href="#packageobfuscationdictionary-filename" class="headerlink" title="-packageobfuscationdictionary filename"></a>-packageobfuscationdictionary filename</h3><p>指定package模糊字典</p>
+<h3 id="–useuniqueclassmembernames"><a href="#–useuniqueclassmembernames" class="headerlink" title="–useuniqueclassmembernames"></a>–useuniqueclassmembernames</h3><p>类和成员混淆的时候，使用唯一的名字</p>
+<h3 id="dontusemixedcaseclassnames"><a href="#dontusemixedcaseclassnames" class="headerlink" title="-dontusemixedcaseclassnames"></a>-dontusemixedcaseclassnames</h3><p>不使用大小写混合类名，<strong>注意，windows用户必须为ProGuard指定该选项</strong>，因为windows对文件的大小写是不敏感的，也就是比如a.java和A.java会认为是同一个文件。如果不这样做并且你的项目中有超过26个类的话，那么ProGuard就会默认混用大小写文件名，导致class文件相互覆盖。</p>
+<h3 id="keeppackagenames-package-filter"><a href="#keeppackagenames-package-filter" class="headerlink" title="-keeppackagenames [package_filter]"></a>-keeppackagenames [package_filter]</h3><p>保持packagename 不混淆</p>
+<h3 id="flattenpackagehierarchy-package-name"><a href="#flattenpackagehierarchy-package-name" class="headerlink" title="-flattenpackagehierarchy [package_name]"></a>-flattenpackagehierarchy [package_name]</h3><p>指定重新打包,所有包重命名,这个选项会进一步模糊包名，将包里的类混淆成n个再重新打包到一个个的package中</p>
+<h3 id="repackageclasses-package-name"><a href="#repackageclasses-package-name" class="headerlink" title="-repackageclasses [package_name]"></a>-repackageclasses [package_name]</h3><p>将包里的类混淆成n个再重新打包到一个统一的package中，会覆盖flattenpackagehierarchy选项</p>
+<h3 id="keepattributes-attribute-filter"><a href="#keepattributes-attribute-filter" class="headerlink" title="-keepattributes [attribute_filter]"></a>-keepattributes [attribute_filter]</h3><p>混淆时可能被移除下面这些东西，如果想保留，需要用该选项，对于一般注解处理如 -keepattributes <em>Annotation</em>。</p>
+<p>attribute_filter :</p>
+<ul>
+<li>Exceptions, </li>
+<li>Signature, </li>
+<li>Deprecated, </li>
+<li>SourceFile, </li>
+<li>SourceDir, </li>
+<li>LineNumberTable,</li>
+<li>LocalVariableTable, </li>
+<li>LocalVariableTypeTable, </li>
+<li>Synthetic,</li>
+<li>#EnclosingMethod, </li>
+<li>RuntimeVisibleAnnotations, </li>
+<li>RuntimeInvisibleAnnotations, </li>
+<li>RuntimeVisibleParameterAnnotations,</li>
+<li>RuntimeInvisibleParameterAnnotations, </li>
+<li>AnnotationDefault.</li>
+</ul>
+<h3 id="dontpreverify"><a href="#dontpreverify" class="headerlink" title="-dontpreverify"></a>-dontpreverify</h3><p>指定不执行预检</p>
+<h3 id="verbose"><a href="#verbose" class="headerlink" title="-verbose"></a>-verbose</h3><p>把所有信息都输出，而不仅仅是输出出错信息</p>
+<h3 id="dontnote-class-filter"><a href="#dontnote-class-filter" class="headerlink" title="-dontnote [class_filter]"></a>-dontnote [class_filter]</h3><p>不输出指定类的错误信息.</p>
+<h3 id="dontwarn-class-filter"><a href="#dontwarn-class-filter" class="headerlink" title="-dontwarn [class_filter]"></a>-dontwarn [class_filter]</h3><p>不打印指定类的警告信息</p>
+<h3 id="ignorewarnings"><a href="#ignorewarnings" class="headerlink" title="-ignorewarnings"></a>-ignorewarnings</h3><p>遇到警告的时候，忽略警告继续执行ProGuard，<strong>不建议添加此项</strong>。</p>
+<h3 id="printconfiguration-filename"><a href="#printconfiguration-filename" class="headerlink" title="-printconfiguration [filename]"></a>-printconfiguration [filename]</h3><p>输出当前ProGuard所使用的配置</p>
+<h3 id="dump-filename"><a href="#dump-filename" class="headerlink" title="-dump [filename]"></a>-dump [filename]</h3><p>指定输出所处理的类的结构</p>
+<h1 id="反射的处理"><a href="#反射的处理" class="headerlink" title="反射的处理"></a>反射的处理</h1><p>在代码中，如果用到了反射，混淆会改变类和成员的名字，导致反射找不到相应的类或者方法，所以开发者在混淆的时候，必须把用到了反射的类保留，不进行混淆。一般而言，使用反射一般会有以下方式，可以搜索代码，找到相关的类，然后在混淆配置里面进行保留：</p>
+<ul>
+<li>Class.forName(“SomeClass”)</li>
+<li>SomeClass.class</li>
+<li>SomeClass.class.getField(“someField”)</li>
+<li>SomeClass.class.getDeclaredField(“someField”)</li>
+<li>SomeClass.class.getMethod(“someMethod”, new Class[] {})</li>
+<li>SomeClass.class.getMethod(“someMethod”, new Class[] { A.class })</li>
+<li>SomeClass.class.getMethod(“someMethod”, new Class[] { A.class, B.class })</li>
+<li>SomeClass.class.getDeclaredMethod(“someMethod”, new Class[] {})</li>
+<li>SomeClass.class.getDeclaredMethod(“someMethod”, new Class[] { A.class })</li>
+<li>SomeClass.class.getDeclaredMethod(“someMethod”, new Class[] { A.class, B.class })</li>
+<li>AtomicIntegerFieldUpdater.newUpdater(SomeClass.class, “someField”)</li>
+<li>AtomicLongFieldUpdater.newUpdater(SomeClass.class, “someField”)</li>
+<li>AtomicReferenceFieldUpdater.newUpdater(SomeClass.class, SomeType.class, “someField”)</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># reflectClass类使用了反射，保留该类</span><br><span class="line">-keep class package.reflectClass &#123; *; &#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="PrgGuard的基本使用demo"><a href="#PrgGuard的基本使用demo" class="headerlink" title="PrgGuard的基本使用demo"></a>PrgGuard的基本使用demo</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">#代码混淆压缩比，在0~7之间，默认为5，一般不做修改</span><br><span class="line">-optimizationpasses 5</span><br><span class="line">#指定混淆是采用的算法，后面的参数是一个过滤器，这个过滤器是谷歌推荐的算法，一般不做更改</span><br><span class="line">-optimizations !code/simplification/cast,!field/*,!class/merging/*</span><br><span class="line"></span><br><span class="line">#混合时不使用大小写混合，混合后的类名为小写,windows下必须使用该选项</span><br><span class="line">-dontusemixedcaseclassnames</span><br><span class="line"></span><br><span class="line">#指定不去忽略非公共库的类和成员</span><br><span class="line">-dontskipnonpubliclibraryclasses</span><br><span class="line">-dontskipnonpubliclibraryclassmembers</span><br><span class="line"></span><br><span class="line">#输出详细信息</span><br><span class="line">-verbose</span><br><span class="line">#输出类名-&gt;混淆后类名的映射关系</span><br><span class="line">-printmapping map.txt</span><br><span class="line"></span><br><span class="line">#不做预校验，preverify是proguard的四个步骤之一，Android不需要preverify，去掉这一步能够加快混淆速度。</span><br><span class="line">-dontpreverify</span><br><span class="line"></span><br><span class="line">#保留Annotation不混淆</span><br><span class="line">-keepattributes *Annotation*,InnerClasses</span><br><span class="line"></span><br><span class="line">#避免混淆泛型</span><br><span class="line">-keepattributes Signature</span><br><span class="line"></span><br><span class="line">#抛出异常时保留代码行号</span><br><span class="line">-keepattributes SourceFile,LineNumberTable</span><br><span class="line"></span><br><span class="line">#保留本地native方法不被混淆</span><br><span class="line">-keepclasseswithmembernames class * &#123;</span><br><span class="line">    native &lt;methods&gt;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">#保留枚举类不被混淆</span><br><span class="line">-keepclassmembers enum * &#123;</span><br><span class="line">    public static **[] values();</span><br><span class="line">    public static ** valueOf(java.lang.String);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">#保留Serializable序列化的类不被混淆</span><br><span class="line">-keepclassmembers class * implements java.io.Serializable &#123;</span><br><span class="line">    static final long serialVersionUID;</span><br><span class="line">    private static final java.io.ObjectStreamField[] serialPersistentFields;</span><br><span class="line">    private void writeObject(java.io.ObjectOutputStream);</span><br><span class="line">    private void readObject(java.io.ObjectInputStream);</span><br><span class="line">    java.lang.Object writeReplace();</span><br><span class="line">    java.lang.Object readResolve();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>另外，由于Android平台在使用混淆的时候，还要特别注意要添加以下一些配置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line">#保留我们使用的四大组件，自定义的Application等等这些类不被混淆</span><br><span class="line">-keep public class * extends android.app.Activity</span><br><span class="line">-keep public class * extends android.app.Application</span><br><span class="line">-keep public class * extends android.app.Service</span><br><span class="line">-keep public class * extends android.content.BroadcastReceiver</span><br><span class="line">-keep public class * extends android.content.ContentProvider</span><br><span class="line">-keep public class * extends android.app.backup.BackupAgentHelper</span><br><span class="line">-keep public class * extends android.preference.Preference</span><br><span class="line">-keep public class * extends android.view.View</span><br><span class="line">-keep public class com.android.vending.licensing.ILicensingService</span><br><span class="line"></span><br><span class="line">#保留support下的所有类及其内部类</span><br><span class="line">-keep class android.support.** &#123;*;&#125;</span><br><span class="line"></span><br><span class="line">#保留R下面的资源</span><br><span class="line">-keep class **.R$* &#123;*;&#125;</span><br><span class="line"></span><br><span class="line">#保留在Activity中的方法参数是view的方法，</span><br><span class="line">-keepclassmembers class * extends android.app.Activity&#123;</span><br><span class="line">    public void *(android.view.View);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">#保留我们自定义控件（继承自View）不被混淆</span><br><span class="line">-keep public class * extends android.view.View&#123;</span><br><span class="line">    *** get*();</span><br><span class="line">    void set*(***);</span><br><span class="line">    public &lt;init&gt;(android.content.Context);</span><br><span class="line">    public &lt;init&gt;(android.content.Context, android.util.AttributeSet);</span><br><span class="line">    public &lt;init&gt;(android.content.Context, android.util.AttributeSet, int);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">#保留Parcelable序列化类不被混淆</span><br><span class="line">-keep class * implements android.os.Parcelable &#123;</span><br><span class="line">  public static final android.os.Parcelable$Creator *;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">#对于带有回调函数的onXXEvent的，不能被混淆</span><br><span class="line">-keepclassmembers class * &#123;</span><br><span class="line">    void *(**On*Event);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">#在我们的app中使用了webView需要进行特殊处理</span><br><span class="line">-keepclassmembers class * extends android.webkit.webViewClient &#123;</span><br><span class="line">    public void *(android.webkit.WebView, java.lang.String, android.graphics.Bitmap);</span><br><span class="line">    public boolean *(android.webkit.WebView, java.lang.String);</span><br><span class="line">&#125;</span><br><span class="line">-keepclassmembers class * extends android.webkit.webViewClient &#123;</span><br><span class="line">    public void *(android.webkit.webView, jav.lang.String);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"># 在app中与HTML5的JavaScript的交互进行特殊处理，如</span><br><span class="line"># package com.ljd.example;</span><br><span class="line">#</span><br><span class="line"># public class JSInterface &#123;</span><br><span class="line">#     @JavascriptInterface</span><br><span class="line">#     public void callAndroidMethod()&#123;</span><br><span class="line">#         // do something</span><br><span class="line">#     &#125;</span><br><span class="line"># &#125;</span><br><span class="line">#我们需要确保这些js要调用的原生方法不能够被混淆，于是我们需要做如下处理</span><br><span class="line">-keepclassmembers class com.ljd.example.JSInterface &#123;</span><br><span class="line">    &lt;methods&gt;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">#内嵌类经常被混淆，结果在调用的时候就崩溃了，如果需要保留内嵌类，则用以下方法来保留内嵌类，如暴力MyClass里面的内嵌类，$就是用来分割内嵌类和母体的标志</span><br><span class="line">-keep class com.test.MyClass$* &#123;*;&#125;</span><br><span class="line">#-----------以下处理反射类---------------</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+      <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center;">
+  <img id="wechat_subscriber_qcode" src="/images/wechat-qcode.png" alt="chenhang wechat" style="width: 200px; max-width: 100%;">
+  <div></div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/java代码混淆/" rel="tag"># java代码混淆</a>
+              <a href="/tags/PrgGuard/" rel="tag"># PrgGuard</a>
+              <a href="/tags/Android混淆/" rel="tag"># Android混淆</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2016/09/07/lua-and-c/" rel="prev" title="Lua和C交互的简易教程">
+      <i class="fa fa-chevron-left"></i> Lua和C交互的简易教程
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2016/10/09/Android-Studio-2.2-NDK/" rel="next" title="Android Studio 2.2 NDK开发环境搭建">
+      Android Studio 2.2 NDK开发环境搭建 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#ProGuard简介和工作流程"><span class="nav-text">ProGuard简介和工作流程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#PrgGuard环境配置和使用"><span class="nav-text">PrgGuard环境配置和使用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#运行PrgGuard需要以下依赖："><span class="nav-text">运行PrgGuard需要以下依赖：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何运行ProGuard"><span class="nav-text">如何运行ProGuard</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#PrgGuard配置文件使用"><span class="nav-text">PrgGuard配置文件使用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Entry-points的概念"><span class="nav-text">Entry points的概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#会用到的指令参数说明"><span class="nav-text">会用到的指令参数说明</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Modifier"><span class="nav-text">Modifier</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Class-Specifications"><span class="nav-text">Class Specifications</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基本指令"><span class="nav-text">基本指令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#basedirectory-directoryname："><span class="nav-text">-basedirectory directoryname：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#injars-class-path"><span class="nav-text">-injars class_path</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#outjars-class-path"><span class="nav-text">-outjars class_path</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#libraryjars-class-path"><span class="nav-text">-libraryjars class_path</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#skipnonpubliclibraryclasses"><span class="nav-text">-skipnonpubliclibraryclasses</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#–dontskipnonpubliclibraryclasses"><span class="nav-text">–dontskipnonpubliclibraryclasses</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dontskipnonpubliclibraryclassmembers"><span class="nav-text">-dontskipnonpubliclibraryclassmembers</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#keepdirectories-directory-filter"><span class="nav-text">-keepdirectories [directory_filter]</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#target-version"><span class="nav-text">-target version</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#forceprocessing"><span class="nav-text">-forceprocessing</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#keep-modifier-…-class-specification"><span class="nav-text">-keep [,modifier,…] class_specification</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#keepclassmembers-modifier-…-class-specification"><span class="nav-text">-keepclassmembers [,modifier,…] class_specification</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#keepclasseswithmembers-modifier-…-class-specification"><span class="nav-text">-keepclasseswithmembers [,modifier,…] class_specification</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#keepnames-class-specification"><span class="nav-text">-keepnames class_specification</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#keepclassmembernames-class-specification"><span class="nav-text">-keepclassmembernames class_specification</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#keepclasseswithmembernames-class-specification"><span class="nav-text">-keepclasseswithmembernames class_specification</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#printseeds-filename"><span class="nav-text">-printseeds [filename]</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dontshrink"><span class="nav-text">-dontshrink</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#printusage-filename"><span class="nav-text">-printusage [filename]</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dontoptimize"><span class="nav-text">-dontoptimize</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#optimizations"><span class="nav-text">-optimizations</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#optimizationpasses-n"><span class="nav-text">-optimizationpasses n</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#assumenosideeffects-class-specification"><span class="nav-text">-assumenosideeffects class_specification</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#–dontobfuscate"><span class="nav-text">–dontobfuscate</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#printmapping-filename"><span class="nav-text">-printmapping [filename]</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#applymapping-filename"><span class="nav-text">-applymapping filename</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#obfuscationdictionary-filename"><span class="nav-text">-obfuscationdictionary filename</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#classobfuscationdictionary-filename"><span class="nav-text">-classobfuscationdictionary filename</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#packageobfuscationdictionary-filename"><span class="nav-text">-packageobfuscationdictionary filename</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#–useuniqueclassmembernames"><span class="nav-text">–useuniqueclassmembernames</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dontusemixedcaseclassnames"><span class="nav-text">-dontusemixedcaseclassnames</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#keeppackagenames-package-filter"><span class="nav-text">-keeppackagenames [package_filter]</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#flattenpackagehierarchy-package-name"><span class="nav-text">-flattenpackagehierarchy [package_name]</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#repackageclasses-package-name"><span class="nav-text">-repackageclasses [package_name]</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#keepattributes-attribute-filter"><span class="nav-text">-keepattributes [attribute_filter]</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dontpreverify"><span class="nav-text">-dontpreverify</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#verbose"><span class="nav-text">-verbose</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dontnote-class-filter"><span class="nav-text">-dontnote [class_filter]</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dontwarn-class-filter"><span class="nav-text">-dontwarn [class_filter]</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ignorewarnings"><span class="nav-text">-ignorewarnings</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#printconfiguration-filename"><span class="nav-text">-printconfiguration [filename]</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dump-filename"><span class="nav-text">-dump [filename]</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#反射的处理"><span class="nav-text">反射的处理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#PrgGuard的基本使用demo"><span class="nav-text">PrgGuard的基本使用demo</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="chenhang"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">chenhang</p>
+  <div class="site-description" itemprop="description">博观而约取，厚积而薄发。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">61</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/shensky711" title="GitHub → https://github.com/shensky711" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/shensky711" title="CSDN → https://blog.csdn.net/shensky711" rel="noopener" target="_blank"><i class="fa fa-fw fa-archive"></i>CSDN</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:shensky711@gmail.com" title="E-Mail → mailto:shensky711@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">chenhang</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">284k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">4:18</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'ST1hmgzJfF6c44BNUyK56qad-gzGzoHsz',
+      appKey     : 'Wy4dwHBHU556tTDardpzBI3i',
+      placeholder: "说点什么吧~",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

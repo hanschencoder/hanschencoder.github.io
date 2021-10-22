@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="bMH0URCoOdzdhSMyGeDuGebWiSxHnJsOLundsaPEZbc">
+  <meta name="msvalidate.01" content="EC8F55291A196E9DD39DDDB134E93A69">
+  <meta name="baidu-site-verification" content="QC6bRBu8qm">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.hanschen.site","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="1. 简介随着 Android Q 发布，「黑暗模式」或者说是「夜间模式」终于在此版本中得到了支持，官方介绍见：https://developer.android.com/guide/topics/ui/look-and-feel/darktheme，再看看效果图：  其实这个功能魅族在两年前就已支持，不得不说 Android 有点落后了，今天我们就来看看原生是怎么实现全局夜间模的吧">
+<meta name="keywords" content="Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android Q 黑暗模式（Dark Mode）源码解析">
+<meta property="og:url" content="http://blog.hanschen.site/2019/10/22/android_q_dark_mode/index.html">
+<meta property="og:site_name" content="HansChen 的博客">
+<meta property="og:description" content="1. 简介随着 Android Q 发布，「黑暗模式」或者说是「夜间模式」终于在此版本中得到了支持，官方介绍见：https://developer.android.com/guide/topics/ui/look-and-feel/darktheme，再看看效果图：  其实这个功能魅族在两年前就已支持，不得不说 Android 有点落后了，今天我们就来看看原生是怎么实现全局夜间模的吧">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://image.hanschen.site/master/2019-10-21-17-21-50.png">
+<meta property="og:updated_time" content="2021-10-21T01:42:39.219Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android Q 黑暗模式（Dark Mode）源码解析">
+<meta name="twitter:description" content="1. 简介随着 Android Q 发布，「黑暗模式」或者说是「夜间模式」终于在此版本中得到了支持，官方介绍见：https://developer.android.com/guide/topics/ui/look-and-feel/darktheme，再看看效果图：  其实这个功能魅族在两年前就已支持，不得不说 Android 有点落后了，今天我们就来看看原生是怎么实现全局夜间模的吧">
+<meta name="twitter:image" content="http://image.hanschen.site/master/2019-10-21-17-21-50.png">
+
+<link rel="canonical" href="http://blog.hanschen.site/2019/10/22/android_q_dark_mode/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Android Q 黑暗模式（Dark Mode）源码解析 | HansChen 的博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?cae9425eed9e207f553597421f71ddad";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">HansChen 的博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类<span class="badge">8</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签<span class="badge">61</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">31</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/shensky711" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.hanschen.site/2019/10/22/android_q_dark_mode/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="chenhang">
+      <meta itemprop="description" content="博观而约取，厚积而薄发。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HansChen 的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Android Q 黑暗模式（Dark Mode）源码解析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-10-22 00:00:00" itemprop="dateCreated datePublished" datetime="2019-10-22T00:00:00+08:00">2019-10-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-10-21 09:42:39" itemprop="dateModified" datetime="2021-10-21T09:42:39+08:00">2021-10-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/10/22/android_q_dark_mode/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/10/22/android_q_dark_mode/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>21k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>19 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="1-简介"><a href="#1-简介" class="headerlink" title="1. 简介"></a>1. 简介</h1><p>随着 Android Q 发布，「黑暗模式」或者说是「夜间模式」终于在此版本中得到了支持，官方介绍见：<a href="https://developer.android.com/guide/topics/ui/look-and-feel/darktheme" target="_blank" rel="noopener">https://developer.android.com/guide/topics/ui/look-and-feel/darktheme</a>，再看看效果图：</p>
+<p><img src="http://image.hanschen.site/master/2019-10-21-17-21-50.png" alt="2019-10-21-17-21-50.png"></p>
+<p>其实这个功能魅族在两年前就已支持，不得不说 Android 有点落后了，今天我们就来看看原生是怎么实现全局夜间模的吧</p>
+<a id="more"></a>
+
+<h1 id="2-打开与关闭"><a href="#2-打开与关闭" class="headerlink" title="2. 打开与关闭"></a>2. 打开与关闭</h1><p>从文档上我们可以可知，打开夜间模式有三个方法：</p>
+<ul>
+<li>设置 -&gt; 显示 -&gt; 深色主题背景</li>
+<li>下拉通知栏中开启</li>
+<li>Pixel 手机开启省点模式时会自动激活夜间模式</li>
+</ul>
+<h1 id="3-如何适配"><a href="#3-如何适配" class="headerlink" title="3. 如何适配"></a>3. 如何适配</h1><p>打开后，我们会发现，除原生几个应用生效外，其他应用依然没有变成深色主题，那么应用该如何适配呢？官方提供了下面两种方法：</p>
+<h2 id="3-1-让应用主题继承-DayNight-主题"><a href="#3-1-让应用主题继承-DayNight-主题" class="headerlink" title="3.1. 让应用主题继承 DayNight 主题"></a>3.1. 让应用主题继承 <code>DayNight</code> 主题</h2><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span> <span class="attr">name</span>=<span class="string">"AppTheme"</span> <span class="attr">parent</span>=<span class="string">"Theme.AppCompat.DayNight"</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>或者继承自</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span> <span class="attr">name</span>=<span class="string">"AppTheme"</span> <span class="attr">parent</span>=<span class="string">"Theme.MaterialComponents.DayNight"</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>继承后，如果当前开启了夜间模式，系统会自动从 night-qualified 中加载资源，所以应用的颜色、图标等资源应尽量避免硬编码，而是推荐使用新增 attributes 指向不同的资源，如</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">?android:attr/textColorPrimary</span><br><span class="line">?attr/colorControlNormal</span><br></pre></td></tr></table></figure>
+
+<p>另外，如果应用希望主动切换夜间/日间模式，可以通过 <code>AppCompatDelegate.setDefaultNightMode()</code> 接口主动切换</p>
+<h2 id="3-2-通过-forceDarkAllowed-启用"><a href="#3-2-通过-forceDarkAllowed-启用" class="headerlink" title="3.2. 通过 forceDarkAllowed 启用"></a>3.2. 通过 forceDarkAllowed 启用</h2><p>如果应用不想自己去适配各种颜色，图标等，可以通过在主题中添加 <code>android:forceDarkAllowed=&quot;true&quot;</code> 标记，这样系统在夜间模式时，会强制改变应用颜色，自动进行适配（这个功能也是本文主要探讨的）。不过如果你的应用本身使用的就是 <code>DayNight</code> 或 <code>Dark Theme</code>，forceDarkAllowed 是不会生效的。</p>
+<p>另外，如果你不希望某个 view 被强制夜间模式处理，则可以给 view 添加 <code>android:forceDarkAllowed=&quot;false&quot;</code> 或者 <a href="https://developer.android.com/reference/android/view/View.html#setForceDarkAllowed(boolean)" target="_blank" rel="noopener">view.setForceDarkAllowed(false)</a>，设置之后，即使打开了夜间模式且主题添加了 forceDarkAllowed，该 view 也不会变深色。比较重要的一点是，这个接口只能关闭夜间模式，不能开启夜间模式，也就是说，如果主题中<strong>没有</strong>显示声明 forceDarkAllowed，<code>view.setForceDarkAllowed(true)</code> 是没办法让 view 单独变深色的。如果 view 关闭了夜间模式，那么它的子 view 也会强制关闭夜间模式</p>
+<p>总结如下：</p>
+<ul>
+<li>主题若添加 forceDarkAllowed=false，无论 view 是否开启 forceDarkAllowed 都不会打开夜间模式</li>
+<li>主题若添加 forceDarkAllowed=true，view 可以通过 forceDarkAllowed 关闭夜间模式，一旦关闭，子 view 的夜间模式也会被关闭</li>
+<li>如果父 view 或主题设置了 forceDarkAllowed=false，子 view 无法通过 forceDarkAllowed=true 单独打开夜间模式为</li>
+<li>若使用的是 <code>DayNight</code> 或 <code>Dark Theme</code> 主题，则所有 forceDarkAllowed 都不生效</li>
+</ul>
+<h1 id="4-实现原理"><a href="#4-实现原理" class="headerlink" title="4. 实现原理"></a>4. 实现原理</h1><p>通过继承主题适配夜间模式的原理本质是根据 ui mode 加载 night-qualified 下是资源，这个并非 Android Q 新增的东西，我们这里不再描述。现在主要来看看 forceDarkAllowed 是如何让系统变深色的。</p>
+<p>既然一切的源头都是 <code>android:forceDarkAllowed</code> 这个属性，那我们就从它入手吧，首先我们要知道，上面我们说的 <code>android:forceDarkAllowed</code> 其实是分为两个用处，它们分别的定义如下：</p>
+<p>frameworks/base/core/res/res/values/attrs.xml</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">declare-styleable</span> <span class="attr">name</span>=<span class="string">"View"</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!-- &lt;p&gt;Whether or not the force dark feature is allowed to be applied to this View.</span></span><br><span class="line"><span class="comment">            &lt;p&gt;Setting this to false will disable the auto-dark feature on this View draws</span></span><br><span class="line"><span class="comment">            including any descendants.</span></span><br><span class="line"><span class="comment">            &lt;p&gt;Setting this to true will allow this view to be automatically made dark, however</span></span><br><span class="line"><span class="comment">            a value of 'true' will not override any 'false' value in its parent chain nor will</span></span><br><span class="line"><span class="comment">            it prevent any 'false' in any of its children. --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">"forceDarkAllowed"</span> <span class="attr">format</span>=<span class="string">"boolean"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">declare-styleable</span>&gt;</span></span><br><span class="line"></span><br><span class="line"> <span class="tag">&lt;<span class="name">declare-styleable</span> <span class="attr">name</span>=<span class="string">"Theme"</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!-- &lt;p&gt;Whether or not the force dark feature is allowed to be applied to this theme.</span></span><br><span class="line"><span class="comment">             &lt;p&gt;Setting this to false will disable the auto-dark feature on everything this</span></span><br><span class="line"><span class="comment">             theme is applied to along with anything drawn by any children of views using</span></span><br><span class="line"><span class="comment">             this theme.</span></span><br><span class="line"><span class="comment">             &lt;p&gt;Setting this to true will allow this view to be automatically made dark, however</span></span><br><span class="line"><span class="comment">             a value of 'true' will not override any 'false' value in its parent chain nor will</span></span><br><span class="line"><span class="comment">             it prevent any 'false' in any of its children. --&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">"forceDarkAllowed"</span> <span class="attr">format</span>=<span class="string">"boolean"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">declare-styleable</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>一个是 View 级别的，一个是 Theme 级别的。</p>
+<h2 id="4-1-Theme-级别-forceDarkAllowed"><a href="#4-1-Theme-级别-forceDarkAllowed" class="headerlink" title="4.1. Theme 级别 forceDarkAllowed"></a>4.1. Theme 级别 forceDarkAllowed</h2><p>从上面的总结来看，Theme 级别的开关优先级是最高的，控制粒度也最大，我们看看源码里面使用它的地方</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// frameworks/base/core/java/android/view/ViewRootImpl.java</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">updateForceDarkMode</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 渲染线程为空，直接返回</span></span><br><span class="line">    <span class="keyword">if</span> (mAttachInfo.mThreadedRenderer == <span class="keyword">null</span>) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 系统是否打开了黑暗模式</span></span><br><span class="line">    <span class="keyword">boolean</span> useAutoDark = getNightMode() == Configuration.UI_MODE_NIGHT_YES;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (useAutoDark) &#123;</span><br><span class="line">        <span class="comment">// forceDarkAllowed 默认值，开发者模式是否打开了强制 smart dark 选项</span></span><br><span class="line">        <span class="keyword">boolean</span> forceDarkAllowedDefault =</span><br><span class="line">                SystemProperties.getBoolean(ThreadedRenderer.DEBUG_FORCE_DARK, <span class="keyword">false</span>);</span><br><span class="line">        TypedArray a = mContext.obtainStyledAttributes(R.styleable.Theme);</span><br><span class="line">        <span class="comment">// useAutoDark = 使用浅色主题 &amp;&amp; 主题中声明的 forceDarkAllowed 值</span></span><br><span class="line">        useAutoDark = a.getBoolean(R.styleable.Theme_isLightTheme, <span class="keyword">true</span>)</span><br><span class="line">                &amp;&amp; a.getBoolean(R.styleable.Theme_forceDarkAllowed, forceDarkAllowedDefault);</span><br><span class="line">        a.recycle();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 关键代码，设置是否强制夜间模式</span></span><br><span class="line">    <span class="keyword">if</span> (mAttachInfo.mThreadedRenderer.setForceDark(useAutoDark)) &#123;</span><br><span class="line">        <span class="comment">// <span class="doctag">TODO:</span> Don't require regenerating all display lists to apply this setting</span></span><br><span class="line">        invalidateWorld(mView);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/base/graphics/java/android/graphics/HardwareRenderer.java</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">setForceDark</span><span class="params">(<span class="keyword">boolean</span> enable)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (mForceDark != enable) &#123;</span><br><span class="line">        mForceDark = enable;</span><br><span class="line">        <span class="comment">// native 代码，mNativeProxy 其实是  RenderThread 代理类的指针</span></span><br><span class="line">        nSetForceDark(mNativeProxy, enable);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这段代码还是比较简单，判断系统：</p>
+<ul>
+<li>是否打开了夜间模式</li>
+<li>是否使用浅色主题</li>
+<li>Theme_forceDarkAllowed 是否为 true</li>
+</ul>
+<p>三者同时为 true 时才会设置夜间模式，而 updateForceDarkMode 调用的时机分别是在 <code>ViewRootImpl#setView</code> 和 <code>ViewRootImpl#updateConfiguration</code>，也就是初始化和夜间模式切换的时候都会调用，确保夜间模式能及时启用和关闭。继续跟踪 <code>HardwareRenderer#setForceDark</code> 发现，这是一个 native 方法，所以接下来让我们进入 native 世界，nSetForceDark 对应的实现位于</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// frameworks/base/core/jni/android_view_ThreadedRenderer.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">android_view_ThreadedRenderer_setForceDark</span><span class="params">(JNIEnv* env, jobject clazz,</span></span></span><br><span class="line"><span class="function"><span class="params">        jlong proxyPtr, jboolean enable)</span> </span>&#123;</span><br><span class="line">    RenderProxy* proxy = <span class="keyword">reinterpret_cast</span>&lt;RenderProxy*&gt;(proxyPtr);</span><br><span class="line">    proxy-&gt;setForceDark(enable);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/base/libs/hwui/renderthread/RenderProxy.cpp</span></span><br><span class="line"><span class="keyword">void</span> RenderProxy::setForceDark(<span class="keyword">bool</span> enable) &#123;</span><br><span class="line">    mRenderThread.<span class="built_in">queue</span>().post([<span class="keyword">this</span>, enable]() &#123; mContext-&gt;setForceDark(enable); &#125;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/base/libs/hwui/renderthread/CanvasContext.h</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CanvasContext</span> :</span> <span class="keyword">public</span> IFrameCallback &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  </span><br><span class="line">    ...</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">setForceDark</span><span class="params">(<span class="keyword">bool</span> enable)</span> </span>&#123; mUseForceDark = enable; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">useForceDark</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> mUseForceDark;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">   </span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 默认关闭强制夜间模式</span></span><br><span class="line">    <span class="keyword">bool</span> mUseForceDark = <span class="literal">false</span>;</span><br><span class="line">   </span><br><span class="line">    ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>最终就是设置了一个 CanvasContext 的变量值而已，什么都还没有做，那么这个变量值的作用是什么，什么时候生效呢？我们进一步查看使用的地方：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// frameworks/base/libs/hwui/TreeInfo.cpp</span></span><br><span class="line">TreeInfo::TreeInfo(TraversalMode mode, renderthread::CanvasContext&amp; canvasContext)</span><br><span class="line">        : mode(mode)</span><br><span class="line">        , prepareTextures(mode == MODE_FULL)</span><br><span class="line">        , canvasContext(canvasContext)</span><br><span class="line">        , damageGenerationId(canvasContext.getFrameNumber())</span><br><span class="line">        <span class="comment">// 初始化 TreeInfo 的 disableForceDark 变量，注意变量值意义的变化，0 代表打开夜间模式，&gt;0 代表关闭夜间模式</span></span><br><span class="line">        , disableForceDark(canvasContext.useForceDark() ? <span class="number">0</span> : <span class="number">1</span>)</span><br><span class="line">        , screenSize(canvasContext.getNextFrameSize()) &#123;&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>进一步看看 disableForceDark 使用的地方</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// frameworks/base/libs/hwui/RenderNode.cpp</span></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 这个可以说是核心方法了，handleForceDark 方法调用栈如下：</span></span><br><span class="line"><span class="comment"> * - RenderNode#prepareTreeImpl</span></span><br><span class="line"><span class="comment"> * - RenderNode#pushStagingDisplayListChanges</span></span><br><span class="line"><span class="comment"> * - RenderNode#syncDisplayList</span></span><br><span class="line"><span class="comment"> * - RenderNode#handleForceDark</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> * 而 RenderNode#prepareTree 是绘制的必经之路，每一个节点都会走一遍这个流程</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">void</span> RenderNode::handleForceDark(android::uirenderer::TreeInfo *info) &#123;</span><br><span class="line">    <span class="comment">// 若没打开强制夜间模式，直接退出</span></span><br><span class="line">    <span class="keyword">if</span> (CC_LIKELY(!info || info-&gt;disableForceDark)) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 根据是否有文字、是否有子节点、子节点数量等情况，得出当前 Node 属于 Foreground 还是 Background</span></span><br><span class="line">    <span class="keyword">auto</span> usage = usageHint();</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">auto</span>&amp; children = mDisplayList-&gt;mChildNodes;</span><br><span class="line">    <span class="keyword">if</span> (mDisplayList-&gt;hasText()) &#123;</span><br><span class="line">        usage = UsageHint::Foreground;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (usage == UsageHint::Unknown) &#123;</span><br><span class="line">        <span class="keyword">if</span> (children.size() &gt; <span class="number">1</span>) &#123;</span><br><span class="line">            usage = UsageHint::Background;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (children.size() == <span class="number">1</span> &amp;&amp;</span><br><span class="line">                children.front().getRenderNode()-&gt;usageHint() !=</span><br><span class="line">                        UsageHint::Background) &#123;</span><br><span class="line">            usage = UsageHint::Background;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (children.size() &gt; <span class="number">1</span>) &#123;</span><br><span class="line">        <span class="comment">// Crude overlap check</span></span><br><span class="line">        SkRect drawn = SkRect::MakeEmpty();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">auto</span> iter = children.rbegin(); iter != children.rend(); ++iter) &#123;</span><br><span class="line">            <span class="keyword">const</span> <span class="keyword">auto</span>&amp; child = iter-&gt;getRenderNode();</span><br><span class="line">            <span class="comment">// We use stagingProperties here because we haven't yet sync'd the children</span></span><br><span class="line">            SkRect bounds = SkRect::MakeXYWH(child-&gt;stagingProperties().getX(), child-&gt;stagingProperties().getY(),</span><br><span class="line">                    child-&gt;stagingProperties().getWidth(), child-&gt;stagingProperties().getHeight());</span><br><span class="line">            <span class="keyword">if</span> (bounds.contains(drawn)) &#123;</span><br><span class="line">                <span class="comment">// This contains everything drawn after it, so make it a background</span></span><br><span class="line">                child-&gt;setUsageHint(UsageHint::Background);</span><br><span class="line">            &#125;</span><br><span class="line">            drawn.join(bounds);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 根据 UsageHint 设置变色策略：Dark（压暗）、Light（提亮）</span></span><br><span class="line">    mDisplayList-&gt;mDisplayList.applyColorTransform(</span><br><span class="line">            usage == UsageHint::Background ? ColorTransform::Dark : ColorTransform::Light);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// frameworks/base/libs/hwui/RecordingCanvas.cpp</span></span><br><span class="line"><span class="keyword">void</span> DisplayListData::applyColorTransform(ColorTransform transform) &#123;</span><br><span class="line">    <span class="comment">// transform: Dark 或 Light</span></span><br><span class="line">    <span class="comment">// color_transform_fns 是一个对应所有绘制指令的函数指针数组，主要是对 op 的 paint 变色或对 bitmap 添加 colorfilter</span></span><br><span class="line">    <span class="keyword">this</span>-&gt;<span class="built_in">map</span>(color_transform_fns, transform);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> Fn, <span class="keyword">typename</span>... Args&gt;</span><br><span class="line"><span class="keyword">inline</span> <span class="keyword">void</span> DisplayListData::<span class="built_in">map</span>(<span class="keyword">const</span> Fn fns[], Args... args) <span class="keyword">const</span> &#123;</span><br><span class="line">    <span class="keyword">auto</span> end = fBytes.get() + fUsed;</span><br><span class="line">    <span class="comment">// 遍历当前的绘制的 op</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">const</span> <span class="keyword">uint8_t</span>* ptr = fBytes.get(); ptr &lt; end;) &#123;</span><br><span class="line">        <span class="keyword">auto</span> op = (<span class="keyword">const</span> Op*)ptr;</span><br><span class="line">        <span class="keyword">auto</span> type = op-&gt;type;</span><br><span class="line">        <span class="keyword">auto</span> skip = op-&gt;skip;</span><br><span class="line">        <span class="comment">// 根据 type 找到对应的 fn，根据调用关系，我们知道 fns 数组对应 color_transform_fns，这个数组其实是一个函数指针数组，下面看看定义</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">auto</span> fn = fns[type]) &#123;  <span class="comment">// We replace no-op functions with nullptrs</span></span><br><span class="line">            <span class="comment">// 执行 </span></span><br><span class="line">            fn(op, args...);        <span class="comment">// to avoid the overhead of a pointless call.</span></span><br><span class="line">        &#125;</span><br><span class="line">        ptr += skip;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> X(T) colorTransformForOp<span class="meta-string">&lt;T&gt;(),</span></span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> color_transform_fn color_transform_fns[] = &#123;</span><br><span class="line">        X(Flush)</span><br><span class="line">        X(Save)</span><br><span class="line">        X(Restore)</span><br><span class="line">        X(SaveLayer)</span><br><span class="line">        X(SaveBehind)</span><br><span class="line">        X(Concat)</span><br><span class="line">        X(SetMatrix)</span><br><span class="line">        X(Translate)</span><br><span class="line">        X(ClipPath)</span><br><span class="line">        X(ClipRect)</span><br><span class="line">        X(ClipRRect)</span><br><span class="line">        X(ClipRegion)</span><br><span class="line">        X(DrawPaint)</span><br><span class="line">        X(DrawBehind)</span><br><span class="line">        X(DrawPath)</span><br><span class="line">        X(DrawRect)</span><br><span class="line">        X(DrawRegion)</span><br><span class="line">        X(DrawOval)</span><br><span class="line">        X(DrawArc)</span><br><span class="line">        X(DrawRRect)</span><br><span class="line">        X(DrawDRRect)</span><br><span class="line">        X(DrawAnnotation)</span><br><span class="line">        X(DrawDrawable)</span><br><span class="line">        X(DrawPicture)</span><br><span class="line">        X(DrawImage)</span><br><span class="line">        X(DrawImageNine)</span><br><span class="line">        X(DrawImageRect)</span><br><span class="line">        X(DrawImageLattice)</span><br><span class="line">        X(DrawTextBlob)</span><br><span class="line">        X(DrawPatch)</span><br><span class="line">        X(DrawPoints)</span><br><span class="line">        X(DrawVertices)</span><br><span class="line">        X(DrawAtlas)</span><br><span class="line">        X(DrawShadowRec)</span><br><span class="line">        X(DrawVectorDrawable)</span><br><span class="line">&#125;;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">undef</span> X</span></span><br></pre></td></tr></table></figure>
+
+<p>color_transform_fn 宏定义展开</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">constexpr</span> <span class="title">color_transform_fn</span> <span class="title">colorTransformForOp</span>() &#123;</span></span><br><span class="line">    <span class="keyword">if</span></span><br><span class="line">        <span class="comment">// op 变量中是否同时包含 paint 及 palette 属性，若同时包含，则是绘制 Image 或者 VectorDrawable 的指令</span></span><br><span class="line">        <span class="comment">// 参考：frameworks/base/libs/hwui/RecordingCanvas.cpp 中各 Op 的定义</span></span><br><span class="line">        <span class="keyword">constexpr</span>(has_paint&lt;T&gt; &amp;&amp; has_palette&lt;T&gt;) &#123;</span><br><span class="line">        </span><br><span class="line">            <span class="keyword">return</span> [](<span class="keyword">const</span> <span class="keyword">void</span>* opRaw, ColorTransform transform) &#123;</span><br><span class="line">                <span class="keyword">const</span> T* op = <span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">const</span> T*&gt;(opRaw);</span><br><span class="line">                <span class="comment">// 关键变色方法，根据 palette 叠加 colorfilter</span></span><br><span class="line">                transformPaint(transform, <span class="keyword">const_cast</span>&lt;SkPaint*&gt;(&amp;(op-&gt;paint)), op-&gt;palette);</span><br><span class="line">            &#125;;</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span></span><br><span class="line">        <span class="comment">// op 变量中是否包含 paint 属性，普通绘制指令</span></span><br><span class="line">        <span class="keyword">constexpr</span>(has_paint&lt;T&gt;) &#123;</span><br><span class="line">            <span class="keyword">return</span> [](<span class="keyword">const</span> <span class="keyword">void</span>* opRaw, ColorTransform transform) &#123;</span><br><span class="line">                <span class="keyword">const</span> T* op = <span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">const</span> T*&gt;(opRaw);</span><br><span class="line">                <span class="comment">// 关键变色方法，对 paint 颜色进行变换</span></span><br><span class="line">                transformPaint(transform, <span class="keyword">const_cast</span>&lt;SkPaint*&gt;(&amp;(op-&gt;paint)));</span><br><span class="line">            &#125;;</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// op 变量不包含 paint 属性，返回空</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> color_transform_fn color_transform_fns[] = &#123;</span><br><span class="line">        <span class="comment">// 根据 Flush、Save、DrawImage等不同绘制 op，返回不同的函数指针</span></span><br><span class="line">        colorTransformForOp&lt;Flush&gt;</span><br><span class="line">        ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>让我们再一次看看 map 方法</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> Fn, <span class="keyword">typename</span>... Args&gt;</span><br><span class="line"><span class="keyword">inline</span> <span class="keyword">void</span> DisplayListData::<span class="built_in">map</span>(<span class="keyword">const</span> Fn fns[], Args... args) <span class="keyword">const</span> &#123;</span><br><span class="line">    <span class="keyword">auto</span> end = fBytes.get() + fUsed;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">const</span> <span class="keyword">uint8_t</span>* ptr = fBytes.get(); ptr &lt; end;) &#123;</span><br><span class="line">        <span class="keyword">auto</span> op = (<span class="keyword">const</span> Op*)ptr;</span><br><span class="line">        <span class="keyword">auto</span> type = op-&gt;type;</span><br><span class="line">        <span class="keyword">auto</span> skip = op-&gt;skip;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">auto</span> fn = fns[type]) &#123;  <span class="comment">// We replace no-op functions with nullptrs</span></span><br><span class="line">            <span class="comment">// 对 op 的 paint 进行颜色变换或叠加 colorfilter</span></span><br><span class="line">            fn(op, args...);        <span class="comment">// to avoid the overhead of a pointless call.</span></span><br><span class="line">        &#125;</span><br><span class="line">        ptr += skip;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>贴了一大段代码，虽然代码中已经包含了注释，但还是可能比较晕，我们先来整理下：</p>
+<ul>
+<li>CanvasContext.mUseForceDark 只会影响 TreeInfo.disableForceDark 的初始化</li>
+<li>TreeInfo.disableForceDark 若大于 0，RenderNode 在执行 handleForceDark 就会直接退出</li>
+<li>handleForceDark 方法里会根据 UsageHint 类型，对所有 op 中的 paint 颜色进行变换，如果是绘制图片，则叠加一个反转的 colorfilter。变换策略有：Dark、Light</li>
+</ul>
+<p>接下来让我们来看 paint 和 colorfilter 的变色实现</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">transformPaint</span><span class="params">(ColorTransform transform, SkPaint* paint)</span> </span>&#123;</span><br><span class="line">    applyColorTransform(transform, *paint);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">applyColorTransform</span><span class="params">(ColorTransform transform, SkPaint&amp; paint)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (transform == ColorTransform::None) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 对画笔颜色进行颜色变换</span></span><br><span class="line">    SkColor newColor = transformColor(transform, paint.getColor());</span><br><span class="line">    paint.setColor(newColor);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (paint.getShader()) &#123;</span><br><span class="line">        SkShader::GradientInfo info;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">array</span>&lt;SkColor, 10&gt; _colorStorage;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">array</span>&lt;SkScalar, _colorStorage.size()&gt; _offsetStorage;</span><br><span class="line">        info.fColorCount = _colorStorage.size();</span><br><span class="line">        info.fColors = _colorStorage.data();</span><br><span class="line">        info.fColorOffsets = _offsetStorage.data();</span><br><span class="line">        SkShader::GradientType type = paint.getShader()-&gt;asAGradient(&amp;info);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (info.fColorCount &lt;= <span class="number">10</span>) &#123;</span><br><span class="line">            <span class="keyword">switch</span> (type) &#123;</span><br><span class="line">                <span class="keyword">case</span> SkShader::kLinear_GradientType:</span><br><span class="line">                    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; info.fColorCount; i++) &#123;</span><br><span class="line">                        <span class="comment">// 对 shader 中的颜色进行颜色变换</span></span><br><span class="line">                        info.fColors[i] = transformColor(transform, info.fColors[i]);</span><br><span class="line">                    &#125;</span><br><span class="line">                    paint.setShader(SkGradientShader::MakeLinear(info.fPoint, info.fColors,</span><br><span class="line">                                                                 info.fColorOffsets, info.fColorCount,</span><br><span class="line">                                                                 info.fTileMode, info.fGradientFlags, <span class="literal">nullptr</span>));</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="keyword">default</span>:<span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (paint.getColorFilter()) &#123;</span><br><span class="line">        SkBlendMode mode;</span><br><span class="line">        SkColor color;</span><br><span class="line">        <span class="comment">// <span class="doctag">TODO:</span> LRU this or something to avoid spamming new color mode filters</span></span><br><span class="line">        <span class="keyword">if</span> (paint.getColorFilter()-&gt;asColorMode(&amp;color, &amp;mode)) &#123;</span><br><span class="line">            <span class="comment">// 对 colorfilter 中的颜色进行颜色变换</span></span><br><span class="line">            color = transformColor(transform, color);</span><br><span class="line">            paint.setColorFilter(SkColorFilter::MakeModeFilter(color, mode));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>逻辑很简单，就是对颜色进行变换，进一步看看变色逻辑：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 提亮颜色</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> SkColor <span class="title">makeLight</span><span class="params">(SkColor color)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 转换成 Lab 模式</span></span><br><span class="line">    Lab lab = sRGBToLab(color);</span><br><span class="line">    <span class="comment">// 对明度进行反转，明度越高，反转后越低</span></span><br><span class="line">    <span class="keyword">float</span> invertedL = <span class="built_in">std</span>::min(<span class="number">110</span> - lab.L, <span class="number">100.0f</span>);</span><br><span class="line">    <span class="keyword">if</span> (invertedL &gt; lab.L) &#123;</span><br><span class="line">        <span class="comment">// 反转后的明度高于原明度，则使用反转后的明度</span></span><br><span class="line">        lab.L = invertedL;</span><br><span class="line">        <span class="keyword">return</span> LabToSRGB(lab, SkColorGetA(color));</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> color;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 压暗颜色</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> SkColor <span class="title">makeDark</span><span class="params">(SkColor color)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 转换成 Lab 模式</span></span><br><span class="line">    Lab lab = sRGBToLab(color);</span><br><span class="line">    <span class="comment">// 对明度进行反转，明度越高，反转后越低</span></span><br><span class="line">    <span class="keyword">float</span> invertedL = <span class="built_in">std</span>::min(<span class="number">110</span> - lab.L, <span class="number">100.0f</span>);</span><br><span class="line">    <span class="keyword">if</span> (invertedL &lt; lab.L) &#123;</span><br><span class="line">        <span class="comment">// 反转后的明度低于原明度，则使用反转后的明度</span></span><br><span class="line">        lab.L = invertedL;</span><br><span class="line">        <span class="comment">// 使用 rgb 格式返回</span></span><br><span class="line">        <span class="keyword">return</span> LabToSRGB(lab, SkColorGetA(color));</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 直接返回原颜色</span></span><br><span class="line">        <span class="keyword">return</span> color;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> SkColor <span class="title">transformColor</span><span class="params">(ColorTransform transform, SkColor color)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">switch</span> (transform) &#123;</span><br><span class="line">        <span class="keyword">case</span> ColorTransform::Light:</span><br><span class="line">            <span class="keyword">return</span> makeLight(color);</span><br><span class="line">        <span class="keyword">case</span> ColorTransform::Dark:</span><br><span class="line">            <span class="keyword">return</span> makeDark(color);</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            <span class="keyword">return</span> color;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>到此，对 paint 的变换结束，看来无非就是反转明度。</p>
+<p>再来看看对图片的变换：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">transformPaint</span><span class="params">(ColorTransform transform, SkPaint* paint, BitmapPalette palette)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 根据 palette 和 colorfilter 判断图片是亮还是暗的</span></span><br><span class="line">    palette = filterPalette(paint, palette);</span><br><span class="line">    <span class="keyword">bool</span> shouldInvert = <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">if</span> (palette == BitmapPalette::Light &amp;&amp; transform == ColorTransform::Dark) &#123;</span><br><span class="line">        <span class="comment">// 图片本身是亮的，但是要求变暗，反转</span></span><br><span class="line">        shouldInvert = <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (palette == BitmapPalette::Dark &amp;&amp; transform == ColorTransform::Light) &#123;</span><br><span class="line">        <span class="comment">// 图片本身是暗的，但是要求变亮，反转</span></span><br><span class="line">        shouldInvert = <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (shouldInvert) &#123;</span><br><span class="line">        SkHighContrastConfig config;</span><br><span class="line">        config.fInvertStyle = SkHighContrastConfig::InvertStyle::kInvertLightness;</span><br><span class="line">        <span class="comment">// 叠加一个亮度反转的 colorfilter</span></span><br><span class="line">        paint-&gt;setColorFilter(SkHighContrastFilter::Make(config)-&gt;makeComposed(paint-&gt;refColorFilter()));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> shouldInvert;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>终于，bitmap 的变换也分析完了，呼~</p>
+<h2 id="4-2-View-级别-forceDarkAllowed"><a href="#4-2-View-级别-forceDarkAllowed" class="headerlink" title="4.2. View 级别 forceDarkAllowed"></a>4.2. View 级别 forceDarkAllowed</h2><p>但是，还没完呢<del>~</del>还记得我们最开始说的，除了 Theme 级别，还有一个 View 级别的 forceDarkAllowed，通过 View 级别 forceDarkAllowed 可以关掉它及它的子 view 的夜间模式开关。依然从 java 层看下去哈</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// rameworks/base/core/java/android/view/View.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">View</span> <span class="keyword">implements</span> <span class="title">Drawable</span>.<span class="title">Callback</span>, <span class="title">KeyEvent</span>.<span class="title">Callback</span>,</span></span><br><span class="line"><span class="class">        <span class="title">AccessibilityEventSource</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">View</span><span class="params">(Context context, @Nullable AttributeSet attrs, <span class="keyword">int</span> defStyleAttr, <span class="keyword">int</span> defStyleRes)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">final</span> TypedArray a = context.obtainStyledAttributes(</span><br><span class="line">                attrs, com.android.internal.R.styleable.View, defStyleAttr, defStyleRes);</span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">int</span> N = a.getIndexCount();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; N; i++) &#123;</span><br><span class="line">            <span class="keyword">int</span> attr = a.getIndex(i);</span><br><span class="line">            <span class="keyword">switch</span> (attr) &#123;</span><br><span class="line">                <span class="keyword">case</span> R.styleable.View_forceDarkAllowed:</span><br><span class="line">                    <span class="comment">// 注意，这个默认是 true 的</span></span><br><span class="line">                    mRenderNode.setForceDarkAllowed(a.getBoolean(attr, <span class="keyword">true</span>));</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/base/graphics/java/android/graphics/RenderNode.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">RenderNode</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">setForceDarkAllowed</span><span class="params">(<span class="keyword">boolean</span> allow)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 又是 native 方法</span></span><br><span class="line">        <span class="keyword">return</span> nSetAllowForceDark(mNativeRenderNode, allow);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// frameworks/base/core/jni/android_view_RenderNode.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> jboolean <span class="title">android_view_RenderNode_setAllowForceDark</span><span class="params">(jlong renderNodePtr, jboolean allow)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> SET_AND_DIRTY(setAllowForceDark, allow, RenderNode::GENERIC);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/base/libs/hwui/RenderProperties.h</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ANDROID_API</span> <span class="title">RenderProperties</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">setAllowForceDark</span><span class="params">(<span class="keyword">bool</span> allow)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 设置到 mPrimitiveFields.mAllowForceDark 变量中</span></span><br><span class="line">        <span class="keyword">return</span> RP_SET(mPrimitiveFields.mAllowForceDark, allow);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">getAllowForceDark</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> mPrimitiveFields.mAllowForceDark;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>和 Theme 级别的一样，仅仅只是设置到变量中而已，关键是要看哪里使用这个变量，经过查找，我们发现，它的使用同样在 RenderNode 的 prepareTreeImpl 中：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> RenderNode::prepareTreeImpl(TreeObserver&amp; observer, TreeInfo&amp; info, <span class="keyword">bool</span> functorsNeedLayer) &#123;</span><br><span class="line"></span><br><span class="line">     ...</span><br><span class="line">    <span class="comment">// 1. 如果 view 关闭了夜间模式，会在这里让 info.disableForceDark 加 1</span></span><br><span class="line">    <span class="comment">// 2. info.disableForceDark 正是 handleForceDark 中关键变量，还记得吗？</span></span><br><span class="line">    <span class="comment">// 3. nfo.disableForceDark 大于 0 会让此 RenderNode 跳过夜间模式处理</span></span><br><span class="line">    <span class="comment">// 4. 如果 info.disableForceDark 本身已经大于 0 了，view.setForceDarkAllowed(true) 也毫无意义</span></span><br><span class="line">    <span class="keyword">if</span> (!mProperties.getAllowForceDark()) &#123;</span><br><span class="line">        info.disableForceDark++;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    prepareLayer(info, animatorDirtyMask);</span><br><span class="line">    <span class="keyword">if</span> (info.mode == TreeInfo::MODE_FULL) &#123;</span><br><span class="line">        <span class="comment">// 这里面会调用 handleForceDark 方法处理夜间模式</span></span><br><span class="line">        pushStagingDisplayListChanges(observer, info);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (mDisplayList) &#123;</span><br><span class="line">        info.out.hasFunctors |= mDisplayList-&gt;hasFunctor();</span><br><span class="line">        <span class="comment">// 递归调用子 Node 的 prepareTreeImpl 方法</span></span><br><span class="line">        <span class="keyword">bool</span> isDirty = mDisplayList-&gt;prepareListAndChildren(</span><br><span class="line">                observer, info, childFunctorsNeedLayer,</span><br><span class="line">                [](RenderNode* child, TreeObserver&amp; observer, TreeInfo&amp; info,</span><br><span class="line">                   <span class="keyword">bool</span> functorsNeedLayer) &#123;</span><br><span class="line">                    child-&gt;prepareTreeImpl(observer, info, functorsNeedLayer);</span><br><span class="line">                &#125;);</span><br><span class="line">        <span class="keyword">if</span> (isDirty) &#123;</span><br><span class="line">            damageSelf(info);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 重要，把 info.disableForceDark 恢复回原来的值，不让它影响 Tree 中同级的其他 RenderNode</span></span><br><span class="line">    <span class="comment">// 但是本 RenderNode 的子节点还是会受影响的，这就是为什么父 view 关闭了夜间模式，子 view 也会受影响的原因</span></span><br><span class="line">    <span class="comment">// 因为还原 info.disableForceDark 操作是在遍历子节点之后执行的</span></span><br><span class="line">    <span class="keyword">if</span> (!mProperties.getAllowForceDark()) &#123;</span><br><span class="line">        info.disableForceDark--;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="5-总结"><a href="#5-总结" class="headerlink" title="5. 总结"></a>5. 总结</h1><p>本文到目前为止，总算把 Android Q 夜间模式实现原理梳理了一遍，总的来说实现不算复杂，说白了就是把 paint 中的颜色转换一下或者叠加一个 colorfilter，虽然中间还有关联知识没有细说，如 RenderThread、DisplayList、RenderNode 等图形相关的概念，限于文章大小，请读者自行了解</p>
+<p>另外，由于水平有限，难免文中有错漏之处，若哪里写的不对，请大家及时指出，蟹蟹啦~</p>
+
+    </div>
+
+    
+    
+    
+      <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center;">
+  <img id="wechat_subscriber_qcode" src="/images/wechat-qcode.png" alt="chenhang wechat" style="width: 200px; max-width: 100%;">
+  <div></div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Android/" rel="tag"># Android</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/10/11/aosp-native-ide/" rel="prev" title="如何顺滑地查看 Android Native 代码">
+      <i class="fa fa-chevron-left"></i> 如何顺滑地查看 Android Native 代码
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/11/20/ninja_compile/" rel="next" title="使用 Ninja 提升模块编译速度">
+      使用 Ninja 提升模块编译速度 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-简介"><span class="nav-text">1. 简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-打开与关闭"><span class="nav-text">2. 打开与关闭</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-如何适配"><span class="nav-text">3. 如何适配</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-让应用主题继承-DayNight-主题"><span class="nav-text">3.1. 让应用主题继承 DayNight 主题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-通过-forceDarkAllowed-启用"><span class="nav-text">3.2. 通过 forceDarkAllowed 启用</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-实现原理"><span class="nav-text">4. 实现原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-Theme-级别-forceDarkAllowed"><span class="nav-text">4.1. Theme 级别 forceDarkAllowed</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-View-级别-forceDarkAllowed"><span class="nav-text">4.2. View 级别 forceDarkAllowed</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-总结"><span class="nav-text">5. 总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="chenhang"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">chenhang</p>
+  <div class="site-description" itemprop="description">博观而约取，厚积而薄发。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">61</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/shensky711" title="GitHub → https://github.com/shensky711" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/shensky711" title="CSDN → https://blog.csdn.net/shensky711" rel="noopener" target="_blank"><i class="fa fa-fw fa-archive"></i>CSDN</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:shensky711@gmail.com" title="E-Mail → mailto:shensky711@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">chenhang</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">284k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">4:18</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'ST1hmgzJfF6c44BNUyK56qad-gzGzoHsz',
+      appKey     : 'Wy4dwHBHU556tTDardpzBI3i',
+      placeholder: "说点什么吧~",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

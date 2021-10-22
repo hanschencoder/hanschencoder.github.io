@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="bMH0URCoOdzdhSMyGeDuGebWiSxHnJsOLundsaPEZbc">
+  <meta name="msvalidate.01" content="EC8F55291A196E9DD39DDDB134E93A69">
+  <meta name="baidu-site-verification" content="QC6bRBu8qm">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.hanschen.site","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="1. 简介随着越来越多大屏和折叠屏设备出现，很多应用并未对不同尺寸的设备进行 UI 适配，这时候应用选择以特定的宽高比显示（虽然 Google 不建议这这样做，官方还是希望开发者可以对不同的屏幕尺寸进行自适应布局~），当应用的宽高比和它的容器比例不兼容的时候，就会以 Letterbox 模式打开。  Letterbox 模式下界面会以指定的比例显示，周围空白区域可以填充壁纸或者颜色。至于 Lett">
+<meta name="keywords" content="Android,Android 12,Android S">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android 12 Letterbox Mode">
+<meta property="og:url" content="http://blog.hanschen.site/2021/10/21/android-12-letterbox/index.html">
+<meta property="og:site_name" content="HansChen 的博客">
+<meta property="og:description" content="1. 简介随着越来越多大屏和折叠屏设备出现，很多应用并未对不同尺寸的设备进行 UI 适配，这时候应用选择以特定的宽高比显示（虽然 Google 不建议这这样做，官方还是希望开发者可以对不同的屏幕尺寸进行自适应布局~），当应用的宽高比和它的容器比例不兼容的时候，就会以 Letterbox 模式打开。  Letterbox 模式下界面会以指定的比例显示，周围空白区域可以填充壁纸或者颜色。至于 Lett">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/shensky711/images/master/2021-10-21-18-17-07.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/shensky711/images/master/2021-10-22-10-33-26.png">
+<meta property="og:updated_time" content="2021-10-22T03:10:08.254Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android 12 Letterbox Mode">
+<meta name="twitter:description" content="1. 简介随着越来越多大屏和折叠屏设备出现，很多应用并未对不同尺寸的设备进行 UI 适配，这时候应用选择以特定的宽高比显示（虽然 Google 不建议这这样做，官方还是希望开发者可以对不同的屏幕尺寸进行自适应布局~），当应用的宽高比和它的容器比例不兼容的时候，就会以 Letterbox 模式打开。  Letterbox 模式下界面会以指定的比例显示，周围空白区域可以填充壁纸或者颜色。至于 Lett">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/shensky711/images/master/2021-10-21-18-17-07.png">
+
+<link rel="canonical" href="http://blog.hanschen.site/2021/10/21/android-12-letterbox/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Android 12 Letterbox Mode | HansChen 的博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?cae9425eed9e207f553597421f71ddad";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">HansChen 的博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类<span class="badge">8</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签<span class="badge">61</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">31</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/shensky711" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.hanschen.site/2021/10/21/android-12-letterbox/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="chenhang">
+      <meta itemprop="description" content="博观而约取，厚积而薄发。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HansChen 的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Android 12 Letterbox Mode
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-10-21 00:00:00" itemprop="dateCreated datePublished" datetime="2021-10-21T00:00:00+08:00">2021-10-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-10-22 11:10:08" itemprop="dateModified" datetime="2021-10-22T11:10:08+08:00">2021-10-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/10/21/android-12-letterbox/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/10/21/android-12-letterbox/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="1-简介"><a href="#1-简介" class="headerlink" title="1. 简介"></a>1. 简介</h1><p>随着越来越多大屏和折叠屏设备出现，很多应用并未对不同尺寸的设备进行 UI 适配，这时候应用选择以特定的宽高比显示（<strong>虽然 Google 不建议这这样做，官方还是希望开发者可以对不同的屏幕尺寸进行自适应布局~</strong>），当应用的宽高比和它的容器比例不兼容的时候，就会以 Letterbox 模式打开。</p>
+<p><img src="https://raw.githubusercontent.com/shensky711/images/master/2021-10-21-18-17-07.png" alt="2021-10-21-18-17-07"></p>
+<p>Letterbox 模式下界面会以指定的比例显示，周围空白区域可以填充壁纸或者颜色。至于 Letterbox 的外观可受以下因素影响：</p>
+<ul>
+<li><code>config_letterboxActivityCornersRadius</code>： 界面圆角大小</li>
+<li><code>config_letterboxBackgroundType</code>： 背景填充类型， 分别有： <ul>
+<li><code>LETTERBOX_BACKGROUND_APP_COLOR_BACKGROUND</code>： 颜色受 <code>android:colorBackground</code> 影响</li>
+<li><code>LETTERBOX_BACKGROUND_APP_COLOR_BACKGROUND_FLOATING</code>： 颜色受 <code>android:colorBackgroundFloating</code> 影响</li>
+<li><code>LETTERBOX_BACKGROUND_SOLID_COLOR</code>： 颜色受 <code>config_letterboxBackgroundColor</code> 影响</li>
+<li><code>LETTERBOX_BACKGROUND_WALLPAPER</code>： 显示壁纸，此选项和 <code>FLAG_SHOW_WALLPAPER</code> 类似，会导致壁纸窗口显示</li>
+</ul>
+</li>
+<li><code>config_letterboxBackgroundWallpaperBlurRadius</code>： 壁纸模糊程度</li>
+<li><code>config_letterboxBackgroundWallaperDarkScrimAlpha</code>： 壁纸变暗程度</li>
+</ul>
+<a id="more"></a>
+
+<h1 id="2-何时触发"><a href="#2-何时触发" class="headerlink" title="2. 何时触发"></a>2. 何时触发</h1><p>Letterbox 的触发条件一般有：</p>
+<ul>
+<li><code>android:resizeableActivity=false</code> 且应用声明的宽高比与容器不兼容的时候(如屏幕宽高超出 <code>android:maxAspectRatio</code>)</li>
+<li><code>setIgnoreOrientationRequest(true)</code> 系统设置忽略屏幕方向后，以横屏模式下打开一个强制竖屏的界面</li>
+</ul>
+<h1 id="3-实现方案"><a href="#3-实现方案" class="headerlink" title="3. 实现方案"></a>3. 实现方案</h1><p>Letterbox 显示的实现并不复杂，Android 12 在 <code>ActivityRecord</code> 中增加了 <code>LetterboxUiController</code> 用以控制 <code>Letterbox</code> 的布局和显示， 先来看看处于 Letterbox 模式时 SurfaceFlinger 状态：</p>
+<p><img src="https://raw.githubusercontent.com/shensky711/images/master/2021-10-22-10-33-26.png" alt="2021-10-22-10-33-26"></p>
+<p>可以看到，跟正常情况相比，除了界面本身的大小和位置被缩放到指定比例外，四周还多了两个 Layer，挂在 ActiviRecord 节点下面， 这两个 Layer 可根据配置进行指定的颜色填充，如果背景是壁纸的话，还可以设置壁纸的 dim 值和模糊程度，这些都可以通过 SurfaceControl 接口轻松实现。</p>
+<p>下面简单分析一下代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// LetterboxUiController.java</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">updateLetterboxSurface</span><span class="params">(WindowState winHint)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> WindowState w = mActivityRecord.findMainWindow();</span><br><span class="line">    <span class="keyword">if</span> (w != winHint &amp;&amp; winHint != <span class="keyword">null</span> &amp;&amp; w != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 对界面四周需要显示的 Layer 进行位置计算</span></span><br><span class="line">    layoutLetterbox(winHint);</span><br><span class="line">    <span class="keyword">if</span> (mLetterbox != <span class="keyword">null</span> &amp;&amp; mLetterbox.needsApplySurfaceChanges()) &#123;</span><br><span class="line">        <span class="comment">// 对 Surface 执行创建、参数设置等操作</span></span><br><span class="line">        mLetterbox.applySurfaceChanges(mActivityRecord.getSyncTransaction());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">layoutLetterbox</span><span class="params">(WindowState winHint)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> WindowState w = mActivityRecord.findMainWindow();</span><br><span class="line">    <span class="keyword">if</span> (w == <span class="keyword">null</span> || winHint != <span class="keyword">null</span> &amp;&amp; w != winHint) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    updateRoundedCorners(w);</span><br><span class="line">    updateWallpaperForLetterbox(w);</span><br><span class="line">    <span class="comment">// 是否进入 Letterbox 模式的关键判断</span></span><br><span class="line">    <span class="keyword">if</span> (shouldShowLetterboxUi(w)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (mLetterbox == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// 把具体逻辑委托给 Letterbox </span></span><br><span class="line">            mLetterbox = <span class="keyword">new</span> Letterbox(() -&gt; mActivityRecord.makeChildSurface(<span class="keyword">null</span>),</span><br><span class="line">                    mActivityRecord.mWmService.mTransactionFactory,</span><br><span class="line">                    mLetterboxConfiguration::isLetterboxActivityCornersRounded,</span><br><span class="line">                    <span class="keyword">this</span>::getLetterboxBackgroundColor,</span><br><span class="line">                    <span class="keyword">this</span>::hasWallpaperBackgroudForLetterbox,</span><br><span class="line">                    <span class="keyword">this</span>::getLetterboxWallpaperBlurRadius,</span><br><span class="line">                    <span class="keyword">this</span>::getLetterboxWallpaperDarkScrimAlpha);</span><br><span class="line">            mLetterbox.attachInput(w);</span><br><span class="line">        &#125;</span><br><span class="line">        mActivityRecord.getPosition(mTmpPoint);</span><br><span class="line">        <span class="comment">// Get the bounds of the "space-to-fill". The transformed bounds have the highest</span></span><br><span class="line">        <span class="comment">// priority because the activity is launched in a rotated environment. In multi-window</span></span><br><span class="line">        <span class="comment">// mode, the task-level represents this. In fullscreen-mode, the task container does</span></span><br><span class="line">        <span class="comment">// (since the orientation letterbox is also applied to the task).</span></span><br><span class="line">        <span class="keyword">final</span> Rect transformedBounds = mActivityRecord.getFixedRotationTransformDisplayBounds();</span><br><span class="line">        <span class="keyword">final</span> Rect spaceToFill = transformedBounds != <span class="keyword">null</span></span><br><span class="line">                ? transformedBounds</span><br><span class="line">                : mActivityRecord.inMultiWindowMode()</span><br><span class="line">                        ? mActivityRecord.getRootTask().getBounds()</span><br><span class="line">                        : mActivityRecord.getRootTask().getParent().getBounds();</span><br><span class="line">        <span class="comment">// 位置计算</span></span><br><span class="line">        mLetterbox.layout(spaceToFill, w.getFrame(), mTmpPoint);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (mLetterbox != <span class="keyword">null</span>) &#123;</span><br><span class="line">        mLetterbox.hide();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Letterbox.LetterboxSurface.java</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">applySurfaceChanges</span><span class="params">(SurfaceControl.Transaction t)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!needsApplySurfaceChanges()) &#123;</span><br><span class="line">        <span class="comment">// Nothing changed.</span></span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    mSurfaceFrameRelative.set(mLayoutFrameRelative);</span><br><span class="line">    <span class="keyword">if</span> (!mSurfaceFrameRelative.isEmpty()) &#123;</span><br><span class="line">        <span class="keyword">if</span> (mSurface == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// 创建挂在 ActivityRecord 节点下的 Surface， 设置为 ColorLayer 类型</span></span><br><span class="line">            createSurface(t);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 设置颜色、位置、裁剪</span></span><br><span class="line">        mColor = mColorSupplier.get();</span><br><span class="line">        t.setColor(mSurface, getRgbColorArray());</span><br><span class="line">        t.setPosition(mSurface, mSurfaceFrameRelative.left, mSurfaceFrameRelative.top);</span><br><span class="line">        t.setWindowCrop(mSurface, mSurfaceFrameRelative.width(),</span><br><span class="line">                mSurfaceFrameRelative.height());</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 对壁纸背景设置透明度和模糊度</span></span><br><span class="line">        mHasWallpaperBackground = mHasWallpaperBackgroundSupplier.get();</span><br><span class="line">        updateAlphaAndBlur(t);</span><br><span class="line"></span><br><span class="line">        t.show(mSurface);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (mSurface != <span class="keyword">null</span>) &#123;</span><br><span class="line">        t.hide(mSurface);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (mSurface != <span class="keyword">null</span> &amp;&amp; mInputInterceptor != <span class="keyword">null</span>) &#123;</span><br><span class="line">        mInputInterceptor.updateTouchableRegion(mSurfaceFrameRelative);</span><br><span class="line">        t.setInputWindowInfo(mSurface, mInputInterceptor.mWindowHandle);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="4-小结"><a href="#4-小结" class="headerlink" title="4. 小结"></a>4. 小结</h1><p>本文只是简单分析了下 Letterbox 模式的触发条件和显示的大概逻辑，还有很多细节没有涉及，比如详细的触发逻辑判断可以查看 <code>LetterboxUiController#shouldShowLetterboxUi</code> 方法</p>
+
+    </div>
+
+    
+    
+    
+      <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center;">
+  <img id="wechat_subscriber_qcode" src="/images/wechat-qcode.png" alt="chenhang wechat" style="width: 200px; max-width: 100%;">
+  <div></div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Android/" rel="tag"># Android</a>
+              <a href="/tags/Android-12/" rel="tag"># Android 12</a>
+              <a href="/tags/Android-S/" rel="tag"># Android S</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/04/09/android-over-scroller/" rel="prev" title="Android 列表滚动优化之 OverScroller 揭秘">
+      <i class="fa fa-chevron-left"></i> Android 列表滚动优化之 OverScroller 揭秘
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-简介"><span class="nav-text">1. 简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-何时触发"><span class="nav-text">2. 何时触发</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-实现方案"><span class="nav-text">3. 实现方案</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-小结"><span class="nav-text">4. 小结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="chenhang"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">chenhang</p>
+  <div class="site-description" itemprop="description">博观而约取，厚积而薄发。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">61</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/shensky711" title="GitHub → https://github.com/shensky711" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/shensky711" title="CSDN → https://blog.csdn.net/shensky711" rel="noopener" target="_blank"><i class="fa fa-fw fa-archive"></i>CSDN</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:shensky711@gmail.com" title="E-Mail → mailto:shensky711@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">chenhang</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">284k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">4:18</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'ST1hmgzJfF6c44BNUyK56qad-gzGzoHsz',
+      appKey     : 'Wy4dwHBHU556tTDardpzBI3i',
+      placeholder: "说点什么吧~",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
