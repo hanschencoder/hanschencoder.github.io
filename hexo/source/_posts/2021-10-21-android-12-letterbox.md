@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Android 12 Letterbox Mode
+title: Android 12 - Letterbox 模式
 tags: [Android,Android 12,Android S]
 categories: 
 - Android
