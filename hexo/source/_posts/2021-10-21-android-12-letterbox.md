@@ -10,7 +10,7 @@ categories:
 
 随着越来越多大屏和折叠屏设备出现，很多应用并未对不同尺寸的设备进行 UI 适配，这时候应用选择以特定的宽高比显示（**虽然 Google 不建议这这样做，官方还是希望开发者可以对不同的屏幕尺寸进行自适应布局~**），当应用的宽高比和它的容器比例不兼容的时候，就会以 Letterbox 模式打开。
 
-![2021-10-21-18-17-07](https://raw.githubusercontent.com/shensky711/images/master/2021-10-21-18-17-07.png)
+![2021-10-21-18-17-07](http://image.hanschen.site/master/2021-10-21-18-17-07.png)
 
 Letterbox 模式下界面会以指定的比例显示，周围空白区域可以填充壁纸或者颜色。至于 Letterbox 的外观可受以下因素影响：
 
@@ -37,7 +37,7 @@ Letterbox 的触发条件一般有：
 
 Letterbox 显示的实现并不复杂，Android 12 在 `ActivityRecord` 中增加了 `LetterboxUiController` 用以控制 `Letterbox` 的布局和显示， 先来看看处于 Letterbox 模式时 SurfaceFlinger 状态：
 
-![2021-10-22-10-33-26](https://raw.githubusercontent.com/shensky711/images/master/2021-10-22-10-33-26.png)
+![2021-10-22-10-33-26](http://image.hanschen.site/master/2021-10-22-10-33-26.png)
 
 可以看到，跟正常情况相比，除了界面本身的大小和位置被缩放到指定比例外，四周还多了两个 Layer，挂在 ActiviRecord 节点下面， 这两个 Layer 可根据配置进行指定的颜色填充，如果背景是壁纸的话，还可以设置壁纸的 dim 值和模糊程度，这些都可以通过 SurfaceControl 接口轻松实现。
 
