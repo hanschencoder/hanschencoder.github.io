@@ -80,7 +80,7 @@ theme: next-v7.8.0
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repo: https://github.com/shensky711/shensky711.github.io.git
+  repo: git@github.com:shensky711/shensky711.github.io.git
   branch: master
   message: 
 
