@@ -16,6 +16,7 @@ Android 也意识到了这个问题，`WinScope ` 的出现有效的帮助我们
 
 ![2021-10-22-14-26-57](http://image.hanschen.site/master/2021-10-22-14-26-57.png)
 
+<!-- more -->
 
 # 2. 工具获取
 
