@@ -143,7 +143,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">32</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">33</span></a>
 
   </li>
         <li class="menu-item menu-item-about">
@@ -207,6 +207,126 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.hanschen.site/2021/10/26/android-12-wms-hierarchy/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="chenhang">
+      <meta itemprop="description" content="博观而约取，厚积而薄发。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HansChen 的博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/10/26/android-12-wms-hierarchy/" class="post-title-link" itemprop="url">Android 12 - WMS 层级结构 && DisplayAreaGroup 引入</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-10-26 00:00:00" itemprop="dateCreated datePublished" datetime="2021-10-26T00:00:00+08:00">2021-10-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-01 16:01:51" itemprop="dateModified" datetime="2021-11-01T16:01:51+08:00">2021-11-01</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/10/26/android-12-wms-hierarchy/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/10/26/android-12-wms-hierarchy/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.7k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-简介"><a href="#1-简介" class="headerlink" title="1. 简介"></a>1. 简介</h1><p>在 Android 窗口管理中，所有的窗口都是以树形数据结构进行组织管理的， 认知这棵 WMS 的树有助于我们理解窗口的管理和显示， 同时， WMS 的层级也决定了其在 <code>SurfaceFlinger</code> 的层级结构， 这恰恰决定了它的显示规则。</p>
+<h1 id="2-WMS-顶层层级构建"><a href="#2-WMS-顶层层级构建" class="headerlink" title="2. WMS 顶层层级构建"></a>2. WMS 顶层层级构建</h1><p>在 Android 12 中， 所有窗口树形管理都继基于 <code>WindowContainer，</code> 每个 <code>WindowContainer</code> 都有一个父节点和若干个子节点， 我们先看看框架中 <code>WindowContainer</code> 都有哪些类型：</p>
+<p><img src="http://image.hanschen.site/master/2021-11-01-10-50-30.png" alt="2021-11-01-10-50-30"></p>
+<ul>
+<li>RootWindowContainer： 最顶层的管理者， 直接管理 DisplayContent</li>
+<li>DisplayContent： 代表着一个真实或者虚拟的显示设备， 在普遍场景中， 系统中只存在一个 DisplayContent</li>
+<li>TaskDisplayArea： 是系统中所有应用任务的父节点， 用于管理 Task</li>
+<li>Task： 代表着一个任务</li>
+<li>ActivityRecord： 代表一个 Activity 节点</li>
+<li>WallpaperWindowToken： 代表壁纸节点</li>
+<li>…</li>
+</ul>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/10/26/android-12-wms-hierarchy/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://blog.hanschen.site/2021/10/22/android-12-winscope/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -230,10 +350,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2021-10-22 00:00:00 / 修改时间：15:36:34" itemprop="dateCreated datePublished" datetime="2021-10-22T00:00:00+08:00">2021-10-22</time>
+              <time title="创建时间：2021-10-22 00:00:00" itemprop="dateCreated datePublished" datetime="2021-10-22T00:00:00+08:00">2021-10-22</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-01 15:43:04" itemprop="dateModified" datetime="2021-11-01T15:43:04+08:00">2021-11-01</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
@@ -287,37 +413,14 @@
 <p>以前对于这些问题，我们可以通过添加日志，调试分析代码等手段去解决，但这些 UI 问题往往出现在一瞬间，很难把握出现的时机，录制下来的日志往往也是巨大的，从海量的日志中提取有效的信息是一个枯燥且繁琐的事情。</p>
 <p>Android 也意识到了这个问题，<code>WinScope</code> 的出现有效的帮助我们跟踪窗口和显示问题。它向开发者提供一个可视化的工具，让开发者能使用工具跟踪整个界面的变化过程， 让我们可以观察到细微的变化。 迭代了几个版本后， Android 12 上 WinScope 变得更好用了，下面来看看大概的效果：</p>
 <p><img src="http://image.hanschen.site/master/2021-10-22-14-26-57.png" alt="2021-10-22-14-26-57"></p>
-<h1 id="2-工具获取"><a href="#2-工具获取" class="headerlink" title="2. 工具获取"></a>2. 工具获取</h1><p>Android 12 平台的 <code>WinScope</code> 工具可以通过源码编译获得， 具体也可以查阅 <code>development/tools/winscope</code> 目录下的 README.md 文档， 这里提供一个 Ubuntu 平台的编译步骤：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1. <span class="built_in">cd</span> development/tools/winscope</span><br><span class="line">2. sudo apt install nodejs npm</span><br><span class="line">3. npm install -g yarn</span><br><span class="line">4. yarn install</span><br><span class="line">5. yarn build</span><br></pre></td></tr></table></figure>
-
-<p>编译过程中遇到一个问题， 看上去是在执行 kotlin 优化的时候， 报了个内存不足的问题：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Caused by: java.lang.OutOfMemoryError: GC overhead <span class="built_in">limit</span> exceeded</span><br><span class="line">	at com.google.gwt.dev.js.ScopeContext.referenceFor(ScopeContext.kt:68)</span><br><span class="line">	at com.google.gwt.dev.js.JsAstMapper.mapAsPropertyNameRef(JsAstMapper.java:247)</span><br><span class="line">	at com.google.gwt.dev.js.JsAstMapper.mapGetProp(JsAstMapper.java:608)</span><br><span class="line">	at com.google.gwt.dev.js.JsAstMapper.mapWithoutLocation(JsAstMapper.java:138)</span><br><span class="line">	at com.google.gwt.dev.js.JsAstMapper.map(JsAstMapper.java:47)</span><br><span class="line">	at com.google.gwt.dev.js.JsAstMapper.mapExpression(JsAstMapper.java:466)</span><br><span class="line">	at com.google.gwt.dev.js.JsAstMapper.mapBinaryOperation(JsAstMapper.java:304)</span><br><span class="line">	at com.google.gwt.dev.js.JsAstMapper.mapAssignmentVariant(JsAstMapper.java:258)</span><br><span class="line">	at com.google.gwt.dev.js.JsAstMapper.mapWithoutLocation(JsAstMapper.java:102)</span><br><span class="line">	at com.google.gwt.dev.js.JsAstMapper.map(JsAstMapper.java:47)</span><br></pre></td></tr></table></figure>
-
-<p>可以在执行 yarn build 前通过 <code>export JAVA_OPTS=&quot;-XX:-UseGCOverheadLimit&quot;</code> 禁用掉 <code>GC overhead limit exceeded</code> 检测</p>
-<p>编译完之后，在当前目录下会一个 <code>dist</code> 目录， 再把 <code>adb_proxy/winscope_proxy.py</code>(一个帮我们开启 trace 抓取命令的脚本， 这样我们就可以告别繁琐的命令啦)， 文件也拷贝进 <code>dist</code> 目录方便我们后面使用</p>
-<h1 id="3-使用"><a href="#3-使用" class="headerlink" title="3. 使用"></a>3. 使用</h1><p>使用比较简单了， 连接手机后： </p>
-<ul>
-<li>双击打开 <code>dist</code> 目录下的 <code>index.html</code> 文件</li>
-<li>在终端执行 <code>python3 winscope_proxy.py</code></li>
-</ul>
-<p>PS： 这里建议大家可以设置个 alias 一键使用，比如：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">alias</span> winscope_s=<span class="string">"xdg-open ~/tools/winscope_s/index.html &amp;&amp; python3 ~/tools/winscope_s/winscope_proxy.py"</span></span><br></pre></td></tr></table></figure>
-
-<p>输入 python 命令后，终端可能会生成一个 <code>token</code> ，把它复制到浏览器即可</p>
-<p>接下来就会出现下面这个界面：</p>
-<p><img src="http://image.hanschen.site/master/2021-10-22-14-32-16.png" alt="2021-10-22-14-32-16"></p>
-<p>在选择 <code>START TRACE</code> 之后， 就可以在手机端进行录制操作，操作完后结束录制即可</p>
-<h1 id="4-功能改进"><a href="#4-功能改进" class="headerlink" title="4. 功能改进"></a>4. 功能改进</h1><p>相比与 Android 11， 新的 <code>WinScope</code> 工具在界面上更友好了，重要的改进如下：</p>
-<ul>
-<li>时间线控制更加方便了，可以选择不同类型的时间线用于控制，否则像以前录制了 <code>ProtoLog</code> 后，通过箭头控制时间推移简直是太难用了</li>
-<li>新的 <code>Transaction</code> 和 <code>Log</code> 浏览界面</li>
-<li>支持 Diff 功能， 不得不说每一帧的参数太多了， 如果没有 diff 功能，实在很难一眼看出那些参数发生了变化</li>
-<li>新增了 IME 的录制， 可以录制 <code>InputMethodService</code>、<code>InputMethodManagerService</code> 和 <code>Client</code> 的事件</li>
-<li>录屏界面可以以 PIP 形式显示在浏览器界面上</li>
-<li>…</li>
-</ul>
-<p>不得不说确实比以前好用一些，赶紧尝尝鲜吧~</p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/10/22/android-12-winscope/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -1235,115 +1338,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://blog.hanschen.site/2017/03/01/pattern_bridge/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="chenhang">
-      <meta itemprop="description" content="博观而约取，厚积而薄发。">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="HansChen 的博客">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2017/03/01/pattern_bridge/" class="post-title-link" itemprop="url">设计模式之桥接模式</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2017-03-01 00:00:00" itemprop="dateCreated datePublished" datetime="2017-03-01T00:00:00+08:00">2017-03-01</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-21 09:42:39" itemprop="dateModified" datetime="2021-10-21T09:42:39+08:00">2021-10-21</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/设计模式/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="fa fa-comment-o"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2017/03/01/pattern_bridge/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2017/03/01/pattern_bridge/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>12k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>11 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="场景问题"><a href="#场景问题" class="headerlink" title="场景问题"></a>场景问题</h1><h2 id="发送消息"><a href="#发送消息" class="headerlink" title="发送消息"></a>发送消息</h2><p>现在我们要实现这样一个功能：发送消息。从业务上看，消息又分成普通消息、加急消息和特急消息多种，不同的消息类型，业务功能处理是不一样的，比如加急消息是在消息上添加“加急”字样，而特急消息除了添加特急外，还会做一条催促的记录，多久不完成会继续催促。从发送消息的手段上看，又有系统内短消息、手机短消息、邮件等等。现在要实现这样的发送提示消息的功能，该如何实现呢？</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2017/03/01/pattern_bridge/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1415,7 +1409,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">32</span>
+          <span class="site-state-item-count">33</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1476,13 +1470,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">286k</span>
+    <span title="站点总字数">291k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">4:20</span>
+    <span title="站点阅读时长">4:25</span>
 </div>
 
         
