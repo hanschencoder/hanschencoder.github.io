@@ -134,7 +134,7 @@ static final class DefaultProvider implements DisplayAreaPolicy.Provider {
  - 所有 layer 值对应的最末端节点， 方便我们后续根据窗口类型添加节点
  - 以 `Map<Feature, List<DisplayArea>>`  形式保存的所有 `Feature` 节点， 方便我们后取出某 `Feature` 对应的所有节点
 
-现在， 虽说我们的 WMS 层级是构建好了， 但对于这些 `Feature` 有何作用还完全没有涉及， 这块打算放在 `WMS Shell` 专题里进行说明~~
+现在， 虽说我们的 WMS 层级是构建好了， 但对于这些 `Feature` 有何作用还完全没有涉及， 这块打算放在 `WM Shell` 专题里进行说明~~
 
 
 # 3. DisplayAreaGroupture
@@ -150,4 +150,4 @@ static final class DefaultProvider implements DisplayAreaPolicy.Provider {
 
 # 4. 小结
 
-WMS 相关的内容体系实在太多， 本文也仅仅是分析 WMS 窗口层级最顶层的结构， 对于具体的窗口添加移除管理这些尚未涉及， 同样， 原生新增的 Feature 节点使用也没有涉及（这大部分都被打包进 WMS Shell 中去了）
+WMS 相关的内容体系实在太多， 本文也仅仅是分析 WMS 窗口层级最顶层的结构， 对于具体的窗口添加移除管理这些尚未涉及， 同样， 原生新增的 Feature 节点使用也没有涉及（这大部分都被打包进 WM Shell 中去了）
