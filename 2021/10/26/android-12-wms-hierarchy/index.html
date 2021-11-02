@@ -38,7 +38,7 @@
 <meta property="og:image" content="http://image.hanschen.site/master/2021-11-01-14-35-46.png">
 <meta property="og:image" content="http://image.hanschen.site/master/2021-11-01-14-45-24.png">
 <meta property="og:image" content="http://image.hanschen.site/master/2021-11-01-15-35-28.png">
-<meta property="og:updated_time" content="2021-11-02T06:59:16.082Z">
+<meta property="og:updated_time" content="2021-11-02T07:46:25.289Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Android 12 - WMS 层级结构 &amp;&amp; DisplayAreaGroup 引入">
 <meta name="twitter:description" content="1. 简介在 Android 窗口管理中，所有的窗口都是以树形数据结构进行组织管理的，认知这棵 WMS 的树有助于我们理解窗口的管理和显示，同时，WMS 的层级也决定了其在 SurfaceFlinger 的层级结构，这恰恰决定了它的显示规则。 2. WMS 顶层层级构建在 Android 12 中，所有窗口树形管理都继基于 WindowContainer， 每个 WindowContainer 都">
@@ -246,7 +246,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-11-02 14:59:16" itemprop="dateModified" datetime="2021-11-02T14:59:16+08:00">2021-11-02</time>
+                <time title="修改时间：2021-11-02 15:46:25" itemprop="dateModified" datetime="2021-11-02T15:46:25+08:00">2021-11-02</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -363,7 +363,7 @@
 <li>以 <code>Map&lt;Feature, List&lt;DisplayArea&gt;&gt;</code>  形式保存的所有 <code>Feature</code> 节点，方便我们后取出某 <code>Feature</code> 对应的所有节点</li>
 </ul>
 <p>现在，虽说我们的 WMS 层级是构建好了，但对于这些 <code>Feature</code> 有何作用还完全没有涉及，这块打算放在 <code>WM Shell</code> 专题里进行说明~~</p>
-<h1 id="3-DisplayAreaGroupture"><a href="#3-DisplayAreaGroupture" class="headerlink" title="3. DisplayAreaGroupture"></a>3. DisplayAreaGroupture</h1><p>通过上面 <code>Feature</code> 的说明可以知道，不同的 <code>Feature</code> 是父子节点的关系，那如果我想划分一个逻辑显示区域，对这块区域配置不同的 <code>Feature</code> 该如何呢？ 这时候就可以使用 <code>DisplayAreaGroup</code> 了，框架允许我们添加多个 <code>DisplayAreaGroup，</code> 并为其配置不同的 <code>Feature</code>。</p>
+<h1 id="3-DisplayAreaGroup"><a href="#3-DisplayAreaGroup" class="headerlink" title="3. DisplayAreaGroup"></a>3. DisplayAreaGroup</h1><p>通过上面 <code>Feature</code> 的说明可以知道，不同的 <code>Feature</code> 是父子节点的关系，那如果我想划分一个逻辑显示区域，对这块区域配置不同的 <code>Feature</code> 该如何呢？ 这时候就可以使用 <code>DisplayAreaGroup</code> 了，框架允许我们添加多个 <code>DisplayAreaGroup，</code> 并为其配置不同的 <code>Feature</code>。</p>
 <p>就像原生提供的 demo 一样，我们可以创建两个 <code>DisplayAreaGroup</code> 并将屏幕一分为二分别放置这两个，这两个区域都是可以作为应用容器的，和分屏不一样的是，这两块区域可以有不同的 Feature 规则以及其他特性，比如设置不同的 <code>DisplayArea#setIgnoreOrientationRequest</code> 值</p>
 <p><img src="http://image.hanschen.site/master/2021-11-01-15-35-28.png" alt="2021-11-01-15-35-28"></p>
 <p><code>DisplayAreaGroup</code> 和 <code>DisplayContent</code> 都是 <code>RootDisplayArea</code> 的直接子类，<code>DisplayAreaGroup</code> 可以认为是一个 Display 划分出的多个<code>逻辑 Display</code> 吧。当然，AOSP 虽然引入了这个概念和代码，但其实并未使用，我们只能从测试代码 <code>DualDisplayAreaGroupPolicyTest</code> 中略窥一二了~      </p>
@@ -456,7 +456,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-简介"><span class="nav-text">1. 简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-WMS-顶层层级构建"><span class="nav-text">2. WMS 顶层层级构建</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-DisplayAreaGroupture"><span class="nav-text">3. DisplayAreaGroupture</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-小结"><span class="nav-text">4. 小结</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-简介"><span class="nav-text">1. 简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-WMS-顶层层级构建"><span class="nav-text">2. WMS 顶层层级构建</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-DisplayAreaGroup"><span class="nav-text">3. DisplayAreaGroup</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-小结"><span class="nav-text">4. 小结</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
