@@ -137,7 +137,7 @@ static final class DefaultProvider implements DisplayAreaPolicy.Provider {
 现在，虽说我们的 WMS 层级是构建好了，但对于这些 `Feature` 有何作用还完全没有涉及，这块打算放在 `WM Shell` 专题里进行说明~~
 
 
-# 3. DisplayAreaGroupture
+# 3. DisplayAreaGroup
 
 通过上面 `Feature` 的说明可以知道，不同的 `Feature` 是父子节点的关系，那如果我想划分一个逻辑显示区域，对这块区域配置不同的 `Feature` 该如何呢？ 这时候就可以使用 `DisplayAreaGroup` 了，框架允许我们添加多个 `DisplayAreaGroup，` 并为其配置不同的 `Feature`。
 
