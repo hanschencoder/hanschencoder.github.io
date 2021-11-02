@@ -4,21 +4,21 @@
   <url>
     <loc>http://blog.hanschen.site/2021/10/26/android-12-wms-hierarchy/</loc>
     
-    <lastmod>2021-11-01T08:47:08.876Z</lastmod>
+    <lastmod>2021-11-02T06:59:16.082Z</lastmod>
     
   </url>
   
   <url>
     <loc>http://blog.hanschen.site/2021/10/22/android-12-winscope/</loc>
     
-    <lastmod>2021-11-01T07:43:04.695Z</lastmod>
+    <lastmod>2021-11-02T06:58:44.546Z</lastmod>
     
   </url>
   
   <url>
     <loc>http://blog.hanschen.site/2021/10/21/android-12-letterbox/</loc>
     
-    <lastmod>2021-10-22T06:09:32.689Z</lastmod>
+    <lastmod>2021-11-02T06:58:00.049Z</lastmod>
     
   </url>
   
@@ -51,55 +51,6 @@
   </url>
   
   <url>
-    <loc>http://blog.hanschen.site/2016/12/27/pattern_proxy/</loc>
-    
-    <lastmod>2021-10-21T01:42:39.219Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.hanschen.site/2019/09/12/aosp_compile_and_flash/</loc>
-    
-    <lastmod>2021-10-21T01:42:39.219Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.hanschen.site/2019/10/11/aosp-native-ide/</loc>
-    
-    <lastmod>2021-10-21T01:42:39.219Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.hanschen.site/2019/11/20/ninja_compile/</loc>
-    
-    <lastmod>2021-10-21T01:42:39.219Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.hanschen.site/2016/07/12/mock-web-server/</loc>
-    
-    <lastmod>2021-10-21T01:42:39.219Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.hanschen.site/2016/08/15/why-https-safe/</loc>
-    
-    <lastmod>2021-10-21T01:42:39.219Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.hanschen.site/2016/08/26/Android-64k-issue/</loc>
-    
-    <lastmod>2021-10-21T01:42:39.219Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://blog.hanschen.site/2016/06/20/moco/</loc>
     
     <lastmod>2021-10-21T01:42:39.219Z</lastmod>
@@ -121,14 +72,14 @@
   </url>
   
   <url>
-    <loc>http://blog.hanschen.site/2016/08/30/lua-guide/</loc>
+    <loc>http://blog.hanschen.site/2016/09/07/lua-and-c/</loc>
     
     <lastmod>2021-10-21T01:42:39.219Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://blog.hanschen.site/2016/08/16/keytool-openssl-ca/</loc>
+    <loc>http://blog.hanschen.site/2016/08/30/lua-guide/</loc>
     
     <lastmod>2021-10-21T01:42:39.219Z</lastmod>
     
@@ -142,14 +93,42 @@
   </url>
   
   <url>
-    <loc>http://blog.hanschen.site/2016/12/01/design-patterns-template-and-strategy/</loc>
+    <loc>http://blog.hanschen.site/2016/12/27/pattern_proxy/</loc>
     
     <lastmod>2021-10-21T01:42:39.219Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://blog.hanschen.site/2017/03/09/pattern_decorator/</loc>
+    <loc>http://blog.hanschen.site/2019/09/12/aosp_compile_and_flash/</loc>
+    
+    <lastmod>2021-10-21T01:42:39.219Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.hanschen.site/2019/11/20/ninja_compile/</loc>
+    
+    <lastmod>2021-10-21T01:42:39.219Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.hanschen.site/2019/10/11/aosp-native-ide/</loc>
+    
+    <lastmod>2021-10-21T01:42:39.219Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.hanschen.site/2016/07/12/mock-web-server/</loc>
+    
+    <lastmod>2021-10-21T01:42:39.219Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.hanschen.site/2016/08/15/why-https-safe/</loc>
     
     <lastmod>2021-10-21T01:42:39.219Z</lastmod>
     
@@ -157,13 +136,6 @@
   
   <url>
     <loc>http://blog.hanschen.site/2016/06/21/mockito/</loc>
-    
-    <lastmod>2021-10-21T01:42:39.219Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.hanschen.site/2016/11/11/fragment-transaction/</loc>
     
     <lastmod>2021-10-21T01:42:39.219Z</lastmod>
     
@@ -184,7 +156,28 @@
   </url>
   
   <url>
-    <loc>http://blog.hanschen.site/2017/04/08/protobuf3/</loc>
+    <loc>http://blog.hanschen.site/2016/11/11/fragment-transaction/</loc>
+    
+    <lastmod>2021-10-21T01:42:39.219Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.hanschen.site/2016/12/01/design-patterns-template-and-strategy/</loc>
+    
+    <lastmod>2021-10-21T01:42:39.219Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.hanschen.site/2017/03/09/pattern_decorator/</loc>
+    
+    <lastmod>2021-10-21T01:42:39.219Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.hanschen.site/2016/08/16/keytool-openssl-ca/</loc>
     
     <lastmod>2021-10-21T01:42:39.219Z</lastmod>
     
@@ -192,6 +185,13 @@
   
   <url>
     <loc>http://blog.hanschen.site/2016/12/10/robolectric/</loc>
+    
+    <lastmod>2021-10-21T01:42:39.219Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.hanschen.site/2017/04/08/protobuf3/</loc>
     
     <lastmod>2021-10-21T01:42:39.219Z</lastmod>
     
@@ -233,13 +233,6 @@
   </url>
   
   <url>
-    <loc>http://blog.hanschen.site/about/index.html</loc>
-    
-    <lastmod>2021-10-21T01:42:39.219Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://blog.hanschen.site/categories/index.html</loc>
     
     <lastmod>2021-10-21T01:42:39.219Z</lastmod>
@@ -254,7 +247,14 @@
   </url>
   
   <url>
-    <loc>http://blog.hanschen.site/2016/09/07/lua-and-c/</loc>
+    <loc>http://blog.hanschen.site/2016/08/26/Android-64k-issue/</loc>
+    
+    <lastmod>2021-10-21T01:42:39.219Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.hanschen.site/about/index.html</loc>
     
     <lastmod>2021-10-21T01:42:39.219Z</lastmod>
     
