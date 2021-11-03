@@ -99,11 +99,11 @@ static final class DefaultProvider implements DisplayAreaPolicy.Provider {
 在 Android 12 上，`Feature` 正式派上用场了，原生添加了以下 `Feature：`
 
  - WindowedMagnification: 屏幕放大功能，通過 SystemUI mirrorSurface 该节点实现内容拷贝，详见 `WindowMagnificationGestureHandler#toggleMagnification`
- - HideDisplayCutout
- - OneHandedBackgroundPanel
- - OneHanded
+ - HideDisplayCutout： 隐藏刘海屏功能，开启后，该节点将不会延伸到刘海屏区域（除了状态栏导航栏等窗口，因为不在节点控制范围之内）
+ - OneHandedBackgroundPanel: 单手模式下此节点会挂载一个纯色图层（在壁纸图层之下），防止深色模式下分辨不出单手模式
+ - OneHanded： 单手模式下相关节点都会做一个向下的位移
  - FullscreenMagnification： 屏幕放大功能，通过无障碍服务 `FullScreenMagnificationController.SpecAnimationBridge#setMagnificationSpecLocked` 最后调用 `DisplayContent#applyMagnificationSpec` 方法实现节点放大。不过源码中并不是通过这个 Feature 来实现相关层级放大的，改造得还不彻底
- - ImePlaceholder
+ - ImePlaceholder： 特殊情况下用来放置输入法的节点
 
 我们知道，Android 系统是有 Z 轴概念的，不同的窗口有不同的高度，所有的窗口类型对应到 WMS 都会有一个 layer 值，layer 越大，显示在越上面，WMS 规定 1~36 层级，每一个 `Feature` 都指定了它所能影响到的 layer 层。这里用颜色对不同 `Feature` 能影响 layer 图层进行颜色标记：
 
