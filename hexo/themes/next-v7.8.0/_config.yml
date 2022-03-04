@@ -179,7 +179,7 @@ site_state: true
 # Key is the link label showing to end users.
 # Value before `||` delimiter is the target permalink, value after `||` delimiter is the name of Font Awesome icon.
 social:
-  GitHub: https://github.com/shensky711 || github
+  GitHub: https://github.com/hanschencoder || github
   CSDN: https://blog.csdn.net/shensky711 || archive
   E-Mail: mailto:shensky711@gmail.com || envelope
   #GitHub: https://github.com/yourname || github
@@ -401,7 +401,7 @@ bookmark:
 # `Follow me on GitHub` banner in the top-right corner.
 github_banner:
   enable: true
-  permalink: https://github.com/shensky711
+  permalink: https://github.com/hanschencoder
   title: Follow me on GitHub
 
 

@@ -3,7 +3,7 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: HansChen 的博客
+title: chenhang 的博客
 subtitle:
 description: 博观而约取，厚积而薄发。
 keywords:
@@ -80,7 +80,7 @@ theme: next-v7.8.0
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repo: git@github.com:shensky711/shensky711.github.io.git
+  repo: git@github.com:hanschencoder/hanschencoder.github.io.git
   branch: master
   message: 
 

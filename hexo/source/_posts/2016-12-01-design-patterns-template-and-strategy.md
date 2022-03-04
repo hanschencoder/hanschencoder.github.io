@@ -434,4 +434,4 @@ public class Test {
 模板方法模式和策略模式都可以用来分离高层的算法和低层的具体实现细节，都允许高层的算法独立于它的具体实现细节重用。但策略模式还有一个额外的好处就是允许具体实现细节独立于高层的算法重用，但这也以一些额外的复杂性、内存以及运行事件开销作为代价
 
 
-[文中示例代码下载：https://github.com/shensky711/awesome-demo/tree/master/Patterns](https://github.com/shensky711/awesome-demo/tree/master/Patterns)
+[文中示例代码下载：https://github.com/hanschencoder/awesome-demo/tree/master/Patterns](https://github.com/hanschencoder/awesome-demo/tree/master/Patterns)
